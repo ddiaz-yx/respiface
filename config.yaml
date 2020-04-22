@@ -1,0 +1,98 @@
+# vtidal, rpm, ratioie, fio2, pmax, flujoaire, peep
+resp_params:
+  tvm:        #volumen tidal
+    screen_name: Vol. Tidal
+    units:  mL
+    min: 100      # ml
+    max: 1000     # ml
+    default: 200
+    step: 10
+    format: .0f
+  brpm:  #Respiraciones por minuto
+    screen_name: Resp. por min
+    units: ""
+    min: 5
+    max: 100
+    default: 20
+    step: 1
+    format: .0f
+  ier:
+    screen_name: "Ratio I:E"
+    units: ""
+    min:      1, 1  # I, E
+    max:      3, 5  # I, E
+    default:  1, 3  # I, E
+    step:     0.5, 0.5  # I, E
+    format:   g, g  # I, E
+  fio2:
+    screen_name: FiO2
+    units: "%"
+    min: 21
+    max: 100
+    default: 21
+    step: 1
+    format: .0f
+  flujoaire:
+    screen_name: Flujo de aire
+    units: L/min
+    min: 0
+    max: 10
+    default: 0
+    step: 1
+    format: .0f
+  peep:
+    screen_name: PEEP
+    units: cm H2O
+    min: 5 #cm H2O
+    max: 15
+    default: 5
+    step: 1
+    format: .0f
+gscale: # Escala de tiempo de los graficos
+  options: [5, 20, 60]
+modes:
+  vcv:
+    vtidal:
+      adjustable: True
+      default:
+    rpm:
+      adjustable: True
+      default: 15 # Respiraciones por minuto
+    ratioie:
+      adjustable: True
+      default: 2  #1:x relación tiempo-inspiratorio : tiempo-exalatorio
+    fio2:
+      adjustable: True
+      default: 100 # porcentaje de oxigeno
+    pmax:
+      adjustable: False
+      default:
+    flujoaire:
+      adjustable: True
+      default: 50 #litros por minuto
+    peep:
+      adjustable: True
+      default: 7 #cmH2O
+  pcv:
+    vtidal:
+      adjustable: True
+      default:
+    rpm:
+      adjustable: True
+      default: 15 # Respiraciones por minuto
+    ratioie:
+      adjustable: True
+      default: 2  #1:x relación tiempo-inspiratorio : tiempo-exalatorio
+    fio2:
+      adjustable: True
+      default: 100 # porcentaje de oxigeno
+    pmax:
+      adjustable: False
+      default:
+    flujoaire:
+      adjustable: True
+      default: 50 #litros por minuto
+    peep:
+      adjustable: True
+      default: 7 #cmH2O
+default_mode: vcv

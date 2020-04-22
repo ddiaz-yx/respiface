@@ -1,0 +1,5 @@
+PyYAML
+pyqtgraph
+PyQt5
+numpy
+
