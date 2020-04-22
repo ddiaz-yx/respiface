@@ -19,11 +19,11 @@ class ParamEnum(Enum):
 
 
 class Parameter:
-    def __init__(self, name: str, screen_name, units, min_, max_, default, step, adjustable: bool = True, format_=".1f"):
+    def __init__(self, name: str = "", screen_name="", units="", min_=None, max_=None, default=None, step=None, adjustable: bool = True, fmt=".1f"):
         self.name = name
         self.screen_name = screen_name
         self.units = units
-        self.value_format = format_
+        self.value_format = fmt
         self.value_step = step
         self.value_max = max_
         self.value_min = min_

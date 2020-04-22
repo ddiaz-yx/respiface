@@ -47,6 +47,7 @@ class ParamSetDialog(QDialog, Ui_Dialog):
         self.btn_up_left.setStyleSheet(btn_style)
         self.horizontalSlider.setStyleSheet(css)
         self.btn_anular.pressed.connect(self.btn_anular_pressed)
+        self.btn_confirmar.pressed.connect(self.btn_confirmar_pressed)
         self.lbl_param_value.setFont(QFont('Arial', DEFAULT_VALUE_FONT_SIZE))
         self.btn_up.pressed.connect(self.btn_up_pressed)
         self.btn_down.pressed.connect(self.btn_down_pressed)
@@ -116,12 +117,12 @@ class ParamSetDialog(QDialog, Ui_Dialog):
             self.lbl_max.show()
             self.lbl_min.show()
             self.lbl_param_value.setFont(QFont('Arial', DEFAULT_VALUE_FONT_SIZE))
-
-        print(f"self.format: {self.format}")
-        print(f"self.value: {self.value}")
-        print(f"self.value_min: {self.value_min}")
-        print(f"self.value_max: {self.value_max}")
-        print(f"self.step: {self.step}")
+        print(f"Param: {self.param.name}")
+        print(f" format: {self.format}")
+        print(f" value: {self.value}")
+        print(f" value_min: {self.value_min}")
+        print(f" value_max: {self.value_max}")
+        print(f" step: {self.step}")
 
     def slider_value_changed(self, val):
         val = val - val%self.step
@@ -176,4 +177,10 @@ class ParamSetDialog(QDialog, Ui_Dialog):
             self.btn_up_left.setDisabled(False)
 
     def btn_anular_pressed(self):
-        self.hide()
+        self.reject()
+
+    def btn_confirmar_pressed(self):
+        self.value = tuple(float(v) for v in self.lbl_param_value.text().split(':'))
+        if len(self.value) == 1:
+            self.value = self.value[0]
+        self.accept()
