@@ -98,9 +98,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         Recién una vez seteados estos valores, se permite al usuario interactuar
         '''
         for name, prm in params_.items():
-            self.params[name].value_min = prm.value_min
-            self.params[name].value_max = prm.value_max
-            self.params[name].value_default = prm.value_default
+            if name != 'ier_i' and name != 'ier_e':
+                self.params[name].value_min = prm.value_min
+                self.params[name].value_max = prm.value_max
+                self.params[name].value_default = prm.value_default
+
+        #Caso especial de ier
+        self.params['ier'].value_min = (params_['ier_i'].value_min, params_['ier_e'].value_min)
+        self.params['ier'].value_max = (params_['ier_i'].value_max, params_['ier_e'].value_max)
+        self.params['ier'].value_default = (params_['ier_i'].value_default, params_['ier_e'].value_default)
+
         self.splash.hide()
         del self.splash
 
@@ -209,18 +216,27 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                                        fmt=fmt, default=default)
 
     def adjust_param(self, param_: ParamEnum, event: QMouseEvent):
+        '''
+        Ajuste de parametros individuales, pinchandolos en la pantalla
+        '''
         self.dialog_set_param.set_parameter(self.params[param_.name])
         result = self.dialog_set_param.exec_()
         print(f"Resultado: {result}")
         if result:
             print(f"New value for: {param_.name}: {self.dialog_set_param.value}")
-            self.params[param_.name].value = self.dialog_set_param.value
-            self.dq_user_set_param.append(self.params[param_.name])
+            self.params[param_.name].value = self.dialog_set_param.value    # Setea el valor en variable local
+            self.dq_user_set_param.append(self.params[param_.name])         # Envia el nuevo valor al controlador
 
     def btnConfig_pressed(self):
+        '''
+        Asjute de varios parámetros en una misma pantalla
+        '''
         self.dialog_cfg = ConfigDialog(params=self.params, parent=self.centralwidget)
         self.dialog_cfg.done.connect(self.new_config)
-        self.dialog_cfg.show()
+        result = self.dialog_cfg.exec_()
+        if result:
+            pass
+            #TODO: leer, setear variables internas y comunicar al controlador
 
     def draw_plots(self):
         t1 = Thread(target=self.draw_async)

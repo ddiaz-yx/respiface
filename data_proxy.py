@@ -73,7 +73,10 @@ class DataProxy(QThread):
         while True:
             if len(self.user_set_param):
                 p: Parameter = self.user_set_param.popleft()
-                msg = bytes(f"set_conf?{p.name}={p.value}".encode('ascii'))
+                if p.name == 'ier':
+                    msg = bytes(f"set_conf?ier_i={p.value[0]}&ier_e={p.value[1]}".encode('ascii'))
+                else:
+                    msg = bytes(f"set_conf?{p.name}={p.value}".encode('ascii'))
                 if self.connection is not None:
                     print(f"Sending {msg} to socket")
                     self.connection.sendall(msg)
