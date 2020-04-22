@@ -14,6 +14,7 @@ from urllib.parse import urlparse
 from urllib import parse
 import struct
 from parameter import Parameter
+from threading import Thread
 
 SOCKET_ADDRESS = "/tmp/my_socket"
 MAX_DATA_POINTS = 6000  # 60 segundos a 100 Hz
@@ -72,7 +73,7 @@ class DataProxy(QThread):
         while True:
             if len(self.user_set_param):
                 p: Parameter = self.user_set_param.popleft()
-                msg = bytes(f"set_conf?{p.name}={p.value}".encode('utf8'))
+                msg = bytes(f"set_conf?{p.name}={p.value}".encode('ascii'))
                 if self.connection is not None:
                     print(f"Sending {msg} to socket")
                     self.connection.sendall(msg)
@@ -80,6 +81,9 @@ class DataProxy(QThread):
                 time.sleep(0.1)
 
     def run(self):
+        ts = Thread(target=self.send_new_param_value, daemon=True)
+        ts.start()
+
         while not self.stop.is_set():
             print("Waiting for connections from unix socket ...")
             self.connection, client_address = self.socket.accept()
@@ -102,6 +106,9 @@ class DataProxy(QThread):
         if all_set:
             self.signal_params_set.emit(self.params)
 
+    def ack(self):
+        self.connection.sendall(bytes('ack'.encode('ascii')))
+
     def process_socket_data(self, data):
         try:
             str_data = data.decode('ascii')
@@ -112,18 +119,22 @@ class DataProxy(QThread):
             elif o.path == 'set_conf':
                 for param, value in data.items():
                     self.params['param'].value = float(value)
+                    self.ack()
                     self.signal_new_param_value.emit(self.params['param'])
             elif o.path == 'def_conf':
                 for param, value in data.items():
                     self.params['param'].value_default = float(value)
+                    self.ack()
                     self.check_params()
             elif o.path == 'min_conf':
                 for param, value in data.items():
                     self.params['param'].value_min = float(value)
+                    self.ack()
                     self.check_params()
             elif o.path == 'max_conf':
                 for param, value in data.items():
                     self.params['param'].value_max = float(value)
+                    self.ack()
                     self.check_params()
             elif o.path == 'd':
                 num_samples = data['n']
