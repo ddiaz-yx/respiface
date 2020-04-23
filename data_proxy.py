@@ -110,7 +110,7 @@ class DataProxy(QThread):
             self.signal_params_set.emit(self.params)
 
     def ack(self):
-        self.connection.sendall(bytes('ack'.encode('ascii')))
+        self.connection.sendall(bytes('+ack\n'.encode('ascii')))
 
     def process_socket_data(self, data):
         try:
