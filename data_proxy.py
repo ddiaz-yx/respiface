@@ -132,12 +132,10 @@ class DataProxy(QThread):
             elif o.path == 'min_conf':
                 for param, value in data.items():
                     self.params[param].value_min = float(value)
-                    self.ack()
 		self.ack()
             elif o.path == 'max_conf':
                 for param, value in data.items():
                     self.params[param].value_max = float(value)
-                    self.ack()
 		self.ack()
             elif o.path == 'd':
                 num_samples = int(data['n'])
