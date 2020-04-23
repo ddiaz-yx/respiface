@@ -140,7 +140,7 @@ class DataProxy(QThread):
                     self.ack()
                     self.check_params()
             elif o.path == 'd':
-                num_samples = data['n']
+                num_samples = int(data['n'])
                 timestamp = float(data['ts'])
                 cp_vals = parse_data(num_samples, data['cp'], timestamp)
                 cf_vals = parse_data(num_samples, data['cf'], timestamp)
