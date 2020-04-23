@@ -121,22 +121,22 @@ class DataProxy(QThread):
                 print("reset_conf")
             elif o.path == 'set_conf':
                 for param, value in data.items():
-                    self.params['param'].value = float(value)
+                    self.params[param].value = float(value)
                     self.ack()
-                    self.signal_new_param_value.emit(self.params['param'])
+                    self.signal_new_param_value.emit(self.params[param])
             elif o.path == 'def_conf':
                 for param, value in data.items():
-                    self.params['param'].value_default = float(value)
+                    self.params[param].value_default = float(value)
                     self.ack()
                     self.check_params()
             elif o.path == 'min_conf':
                 for param, value in data.items():
-                    self.params['param'].value_min = float(value)
+                    self.params[param].value_min = float(value)
                     self.ack()
                     self.check_params()
             elif o.path == 'max_conf':
                 for param, value in data.items():
-                    self.params['param'].value_max = float(value)
+                    self.params[param].value_max = float(value)
                     self.ack()
                     self.check_params()
             elif o.path == 'd':
