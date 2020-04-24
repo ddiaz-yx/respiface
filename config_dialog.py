@@ -1,6 +1,14 @@
+'''
+Screen intended beheavior:
+Clicking on a parameter, enables editing its value with the slider or the arrow buttons
+Clicking again on the parameter frame or clicking Accept, will set the parameter, although changes will only be applied upon returning to the main screen.
+Clicking Cancel buton will undo changes to the selected parameter, and deselect it
+Clicking Volver will return to the main screen. A dialog will ask to confirm the changes. If confirmed, the new parameters and/or operation mode will be applied
+'''
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QMouseEvent
 
+from confirm_dialog import ConfirmDialog
 from ui_config_dialog import Ui_Dialog
 
 from PyQt5.QtWidgets import QDialog, QFrame, QLabel
@@ -8,14 +16,13 @@ from PyQt5 import QtCore, Qt
 
 from functools import partial
 from parameter import Parameter
-
+import copy
 
 class ConfigDialog(QDialog, Ui_Dialog):
-    done = pyqtSignal(dict)
 
-    def __init__(self, params, parent=None):
+    def __init__(self, params: dict, parent=None):
         QDialog.__init__(self, parent)
-        self.params: dict = params
+        self.params = copy.deepcopy(params)
         self.setupUi(self)
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
         self.setStyleSheet("background-color: lightgray; color: black;")
@@ -29,7 +36,7 @@ class ConfigDialog(QDialog, Ui_Dialog):
         self.horizontalSlider.valueChanged.connect(self.slider_value_changed)
         self.btn_left_arrow.pressed.connect(self.btn_left_arrow_pressed)
         self.btn_right_arrow.pressed.connect(self.btn_right_arrow_pressed)
-        self.enable_adjust(False)
+        self.adjusting(False)
         self.btnAceptar.pressed.connect(self.btnAceptar_pressed)
         self.btnCancelar.pressed.connect(self.btnCancelar_pressed)
         self.btnVolver.pressed.connect(self.btnVolver_pressed)
@@ -52,22 +59,27 @@ class ConfigDialog(QDialog, Ui_Dialog):
             self.selected_param_frame.setFrameShadow(QFrame.Raised)
             self.selected_param = None
             self.selected_param_frame = None
-        self.enable_adjust(False)
+        self.adjusting(False)
         self.uncommited_change = False
 
     def btnVolver_pressed(self):
-        self.done.emit(self.params)
-        self.hide()
+        dlg = ConfirmDialog()
+        if dlg.exec_():
+            self.accept()
+        else:
+            self.reject()
 
-    def enable_adjust(self, enabled):
+    def adjusting(self, enabled):
         if enabled:
             self.btn_left_arrow.show()
             self.btn_right_arrow.show()
             self.horizontalSlider.show()
+            self.btnVolver.setEnabled(False)
         else:
             self.btn_left_arrow.hide()
             self.btn_right_arrow.hide()
             self.horizontalSlider.hide()
+            self.btnVolver.setEnabled(True)
 
         self.btn_left_arrow.setEnabled(enabled)
         self.btn_right_arrow.setEnabled(enabled)
@@ -113,7 +125,7 @@ class ConfigDialog(QDialog, Ui_Dialog):
         self.selected_param_frame.setFrameShadow(QFrame.Raised)
         self.selected_param = None
         self.selected_param_frame = None
-        self.enable_adjust(False)
+        self.adjusting(False)
         self.uncommited_change = False
 
     def frame_pressed(self, frame: QFrame, event: QMouseEvent):
@@ -124,7 +136,7 @@ class ConfigDialog(QDialog, Ui_Dialog):
             elif not self.uncommited_change:
                 self.unselect_child_frames(frame.parent())
                 frame.setFrameShadow(QFrame.Sunken)
-                self.enable_adjust(True)
+                self.adjusting(True)
                 self.selected_param_frame = frame
                 self.selected_param = self.params[frame.objectName().replace("frm_", "")]
                 val = float(self.get_value_label(frame).text())

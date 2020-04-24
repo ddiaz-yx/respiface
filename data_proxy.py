@@ -70,15 +70,24 @@ class DataProxy(QThread):
             self.params[p] = Parameter(name=p)
 
     def send_new_param_value(self):
+        '''
+        Periodically checks the deque for new params set by the user
+        It can receybe either a Parameter object or a dictionay of Parameters
+        '''
         while True:
             if len(self.user_set_param):
-                p: Parameter = self.user_set_param.popleft()
-                if p.name == 'ier':
-                    msg = bytes(f"set_conf?ier_i={p.value[0]}&ier_e={p.value[1]}\n".encode('ascii'))
-                else:
-                    msg = bytes(f"set_conf?{p.name}={p.value}\n".encode('ascii'))
+                msg = bytes("set_conf?".encode('ascii'))
+                p = self.user_set_param.popleft()
+                if isinstance(p, Parameter):
+                    p = {f'{p.name}': p}
+                for param in p.values():
+                    if param.name == 'ier':
+                        msg += bytes(f"ier_i={param.value[0]}&ier_e={param.value[1]}".encode('ascii'))
+                    else:
+                        msg += bytes(f"{param.name}={param.value}".encode('ascii'))
+                msg = msg + bytes("\n".encode('ascii'))  # Adds end-line
+                print(f"Sending {msg} to socket")
                 if self.connection is not None:
-                    print(f"Sending {msg} to socket")
                     self.connection.sendall(msg)
             else:
                 time.sleep(0.1)
@@ -123,22 +132,22 @@ class DataProxy(QThread):
                 for param, value in data.items():
                     self.params[param].value = float(value)
                     self.signal_new_param_value.emit(self.params[param])
-		self.ack()
+                self.ack()
             elif o.path == 'def_conf':
                 for param, value in data.items():
                     self.params[param].value_default = float(value)
                     self.check_params()
-		self.ack()
+                self.ack()
             elif o.path == 'min_conf':
                 for param, value in data.items():
                     self.params[param].value_min = float(value)
                     self.ack()
-		self.ack()
+                self.ack()
             elif o.path == 'max_conf':
                 for param, value in data.items():
                     self.params[param].value_max = float(value)
                     self.ack()
-		self.ack()
+                self.ack()
             elif o.path == 'd':
                 num_samples = int(data['n'])
                 timestamp = float(data['ts'])
