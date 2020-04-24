@@ -21,14 +21,15 @@ MAX_DATA_POINTS = 6000  # 60 segundos a 100 Hz
 SAMPLE_PERIOD = 0.01  # seconds
 
 PARAM_TYPES = {
-	'fio2': float,
-	'brpm': int,
-	'ier_i': int,
-	'ier_e': int,
-	'ast': int,
-	'mode': int,
-	'tvm': int,
-	'peep': int
+    'fio2': float,
+    'brpm': int,
+    'ier': int,
+    'ier_i': int,
+    'ier_e': int,
+    'ast': int,
+    'mode': int,
+    'tvm': int,
+    'peep': int
 }
 PARAM_NAMES = (k for k in PARAM_TYPES)
 
@@ -80,18 +81,27 @@ class DataProxy(QThread):
             self.params[p] = Parameter(name=p)
 
     def send_new_param_value(self):
+        """
+        Periodically checks the deque for new params set by the user
+        It can receybe either a Parameter object or a dictionay of Parameters
+        """
         while True:
             if len(self.user_set_param):
-                p: Parameter = self.user_set_param.popleft()
-                if p.name == 'ier':
-                    ier_i = PARAM_TYPES['ier_i'](p.value[0])
-                    ier_e = PARAM_TYPES['ier_e'](p.value[1])
-                    msg = bytes(f"set_conf?ier_i={ier_i}&ier_e={ier_e}\n".encode('ascii'))
-                else:
-                    val = PARAM_TYPES[p.name](p.value)
-                    msg = bytes(f"set_conf?{p.name}={val}\n".encode('ascii'))
+                msg = bytes("set_conf?".encode('ascii'))
+                p = self.user_set_param.popleft()
+                if isinstance(p, Parameter):
+                    p = {f'{p.name}': p}
+                for param in p.values():
+                    if param.name == 'ier':
+                        val_i = PARAM_TYPES[param.name](param.value[0])
+                        val_e = PARAM_TYPES[param.name](param.value[1])
+                        msg += bytes(f"ier_i={val_i}&ier_e={val_e}".encode('ascii'))
+                    else:
+                        val = PARAM_TYPES[param.name](param.value)
+                        msg += bytes(f"{param.name}={val}".encode('ascii'))
+                msg = msg + bytes("\n".encode('ascii'))  # Adds end-line
+                print(f"Sending {msg} to socket")
                 if self.connection is not None:
-                    print(f"Sending {msg} to socket")
                     self.connection.sendall(msg)
             else:
                 time.sleep(0.1)
@@ -112,9 +122,9 @@ class DataProxy(QThread):
                     self.process_socket_data(data)
 
     def check_params(self):
-        '''
+        """
         Verifica que todos los parámetros hayan sido seteados antes de informar a la GUI
-        '''
+        """
         all_set = True
         for p in self.params.values():
             if p.value_max is None or p.value_min is None or p.value_default is None:

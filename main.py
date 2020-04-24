@@ -1,7 +1,6 @@
 import sys
 from functools import partial
 from threading import Thread
-from typing import Dict
 import numpy as np
 import pyqtgraph as pg
 from PyQt5 import QtCore, QtWidgets
@@ -9,7 +8,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QMouseEvent, QPixmap
 from PyQt5.QtWidgets import QLabel, QFrame, QMessageBox, QSplashScreen, QDialog
 from pyqtgraph.widgets.RemoteGraphicsView import RemoteGraphicsView
-
+import copy
 from config_dialog import ConfigDialog
 from param_dialog import ParamSetDialog
 from ui_main_window import Ui_MainWindow
@@ -51,14 +50,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.params = dict()  # Dict[str, Parameter]
         self.read_config()
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
-        self.dialog_cfg = ConfigDialog(self.params)
         self.setStyleSheet("QMainWindow {background-color: black};")
         self.plot_update_timer = QtCore.QTimer()
         self.test_timer = QtCore.QTimer()
 
         self.gscale_options = (5, 20, 60)
-        self.gscale_idx = 0  # Indice de gscale options
-        self.gtime_ini = time.time()  # Marca el inicio de la ventana de gráficos
+        self.gscale_idx = 0             # Indice de gscale options
+        self.gtime_ini = time.time()    # Marca el inicio de la ventana de gráficos
 
         self.set_styles()
         self.set_up_plots()
@@ -90,9 +88,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         # Signals and slots
         self.btnConfig.pressed.connect(self.btnConfig_pressed)
-        self.proxy.signal_params_set.connect(self.set_params_from_controller)
+        self.proxy.signal_params_set.connect(self.set_params_properties_from_controller)
 
-    def set_params_from_controller(self, params_: dict):
+    def set_params_properties_from_controller(self, params_: dict):
         '''
         Recibe los valore min, max y por defecto desde el controlador
         Recién una vez seteados estos valores, se permite al usuario interactuar
@@ -168,8 +166,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.adjust_gscale()
 
-    def new_config(self, new_param_dict):
-        self.params = new_param_dict
+    def update_param_labels(self):
         for name, p in self.params.items():
             label = self.findChild(QLabel, name="lbl_" + name)
             if label:
@@ -217,26 +214,27 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def adjust_param(self, param_: ParamEnum, event: QMouseEvent):
         '''
-        Ajuste de parametros individuales, pinchandolos en la pantalla
+        Adjustment of single params ( by clicking its frame in the main screen)
         '''
         self.dialog_set_param.set_parameter(self.params[param_.name])
         result = self.dialog_set_param.exec_()
-        print(f"Resultado: {result}")
         if result:
             print(f"New value for: {param_.name}: {self.dialog_set_param.value}")
             self.params[param_.name].value = self.dialog_set_param.value    # Setea el valor en variable local
             self.dq_user_set_param.append(self.params[param_.name])         # Envia el nuevo valor al controlador
+            self.update_param_labels()
 
     def btnConfig_pressed(self):
         '''
-        Asjute de varios parámetros en una misma pantalla
+        Adjust all params in a single screen
         '''
-        self.dialog_cfg = ConfigDialog(params=self.params, parent=self.centralwidget)
-        self.dialog_cfg.done.connect(self.new_config)
-        result = self.dialog_cfg.exec_()
+        dialog_cfg = ConfigDialog(params=self.params, parent=self.centralwidget)
+        result = dialog_cfg.exec_()
         if result:
-            pass
-            #TODO: leer, setear variables internas y comunicar al controlador
+            print("Shazooo")
+            self.params = copy.deepcopy(dialog_cfg.params)
+            self.dq_user_set_param.append(self.params)  # Envia el nuevo valor al controlador
+        self.update_param_labels()
 
     def draw_plots(self):
         t1 = Thread(target=self.draw_async)
