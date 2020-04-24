@@ -20,7 +20,18 @@ SOCKET_ADDRESS = "/tmp/my_socket"
 MAX_DATA_POINTS = 6000  # 60 segundos a 100 Hz
 SAMPLE_PERIOD = 0.01  # seconds
 
-PARAM_NAMES = ('fio2', 'brpm', 'ier_i', 'ier_e', 'ast', 'mode', 'tvm', 'peep')
+PARAM_TYPES = {
+    'fio2': float,
+    'brpm': int,
+    'ier': int,
+    'ier_i': int,
+    'ier_e': int,
+    'ast': int,
+    'mode': int,
+    'tvm': int,
+    'peep': int
+}
+PARAM_NAMES = (k for k in PARAM_TYPES)
 
 
 class OpMode(Enum):
@@ -70,10 +81,10 @@ class DataProxy(QThread):
             self.params[p] = Parameter(name=p)
 
     def send_new_param_value(self):
-        '''
+        """
         Periodically checks the deque for new params set by the user
         It can receybe either a Parameter object or a dictionay of Parameters
-        '''
+        """
         while True:
             if len(self.user_set_param):
                 msg = bytes("set_conf?".encode('ascii'))
@@ -82,9 +93,12 @@ class DataProxy(QThread):
                     p = {f'{p.name}': p}
                 for param in p.values():
                     if param.name == 'ier':
-                        msg += bytes(f"ier_i={param.value[0]}&ier_e={param.value[1]}".encode('ascii'))
+                        val_i = PARAM_TYPES[param.name](param.value[0])
+                        val_e = PARAM_TYPES[param.name](param.value[1])
+                        msg += bytes(f"ier_i={val_i}&ier_e={val_e}".encode('ascii'))
                     else:
-                        msg += bytes(f"{param.name}={param.value}".encode('ascii'))
+                        val = PARAM_TYPES[param.name](param.value)
+                        msg += bytes(f"{param.name}={val}".encode('ascii'))
                 msg = msg + bytes("\n".encode('ascii'))  # Adds end-line
                 print(f"Sending {msg} to socket")
                 if self.connection is not None:
@@ -108,9 +122,9 @@ class DataProxy(QThread):
                     self.process_socket_data(data)
 
     def check_params(self):
-        '''
+        """
         Verifica que todos los parámetros hayan sido seteados antes de informar a la GUI
-        '''
+        """
         all_set = True
         for p in self.params.values():
             if p.value_max is None or p.value_min is None or p.value_default is None:

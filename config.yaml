@@ -32,14 +32,6 @@ resp_params:
     default: 21
     step: 1
     format: .0f
-  flujoaire:
-    screen_name: Flujo de aire
-    units: L/min
-    min: 0
-    max: 10
-    default: 0
-    step: 1
-    format: .0f
   peep:
     screen_name: PEEP
     units: cm H2O
