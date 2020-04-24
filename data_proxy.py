@@ -20,7 +20,17 @@ SOCKET_ADDRESS = "/tmp/my_socket"
 MAX_DATA_POINTS = 6000  # 60 segundos a 100 Hz
 SAMPLE_PERIOD = 0.01  # seconds
 
-PARAM_NAMES = ('fio2', 'brpm', 'ier_i', 'ier_e', 'ast', 'mode', 'tvm', 'peep')
+PARAM_TYPES = {
+	'fio2': float,
+	'brpm': int,
+	'ier_i': int,
+	'ier_e': int,
+	'ast': int,
+	'mode': int,
+	'tvm': int,
+	'peep': int
+}
+PARAM_NAMES = (k for k in PARAM_TYPES)
 
 
 class OpMode(Enum):
@@ -74,9 +84,12 @@ class DataProxy(QThread):
             if len(self.user_set_param):
                 p: Parameter = self.user_set_param.popleft()
                 if p.name == 'ier':
-                    msg = bytes(f"set_conf?ier_i={p.value[0]}&ier_e={p.value[1]}\n".encode('ascii'))
+                    ier_i = PARAM_TYPES['ier_i'](p.value[0])
+                    ier_e = PARAM_TYPES['ier_e'](p.value[1])
+                    msg = bytes(f"set_conf?ier_i={ier_i}&ier_e={ier_e}\n".encode('ascii'))
                 else:
-                    msg = bytes(f"set_conf?{p.name}={p.value}\n".encode('ascii'))
+                    val = PARAM_TYPES[p.name](p.value)
+                    msg = bytes(f"set_conf?{p.name}={val}\n".encode('ascii'))
                 if self.connection is not None:
                     print(f"Sending {msg} to socket")
                     self.connection.sendall(msg)
@@ -123,22 +136,22 @@ class DataProxy(QThread):
                 for param, value in data.items():
                     self.params[param].value = float(value)
                     self.signal_new_param_value.emit(self.params[param])
-		self.ack()
+                self.ack()
             elif o.path == 'def_conf':
                 for param, value in data.items():
                     self.params[param].value_default = float(value)
-                    self.check_params()
-		self.ack()
+                self.ack()
+                self.check_params()
             elif o.path == 'min_conf':
                 for param, value in data.items():
                     self.params[param].value_min = float(value)
-                    self.ack()
-		self.ack()
+                self.ack()
+                self.check_params()
             elif o.path == 'max_conf':
                 for param, value in data.items():
                     self.params[param].value_max = float(value)
-                    self.ack()
-		self.ack()
+                self.ack()
+                self.check_params()
             elif o.path == 'd':
                 num_samples = int(data['n'])
                 timestamp = float(data['ts'])
