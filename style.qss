@@ -56,6 +56,6 @@ QLineEdit {
 }
 
 QPushButton {
-        background:         #99AABB;
+        background:         lightgray;
         color:              black;
 }

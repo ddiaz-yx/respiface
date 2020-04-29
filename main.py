@@ -19,7 +19,7 @@ from data_proxy import DataProxy
 import time
 
 CONFIG_FILE = "config.yaml"
-COLOR_PRESSURE = "AA9900" # "EEEE88"
+COLOR_PRESSURE = "FFC107" # "EEEE88"
 COLOR_FLOW = "00AA33" # "44FF88"
 MAX_DATA_POINTS = 3000  # 60 segundos a 50 Hz
 UNDER_CURVE_ALPHA = "88"
@@ -89,7 +89,25 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         # Signals and slots
         self.btnConfig.pressed.connect(self.btnConfig_pressed)
-        self.proxy.signal_params_set.connect(self.set_params_properties_from_controller)
+        self.proxy.signal_params_properties_set.connect(self.set_params_properties_from_controller)
+        self.proxy.signal_new_param_values.connect(self.update_param_value_from_controller)
+
+    def update_param_value_from_controller(self, params_: dict):
+        '''
+        Recibe los valore desde el controlador
+        '''
+        for name, prm in params_.items():
+            if 'ier' not in name:
+                try:
+                    self.params[name].value = prm.value
+                except KeyError as e:
+                    print("Received config for unknown parameter: " + str(e))
+
+        #Caso especial de ier
+        if 'ier_i' in params_.keys() and 'ier_e' in params_.keys():
+            self.params['ier'].value = (params_['ier_i'].value, params_['ier_e'].value)
+
+        self.update_param_labels()
 
     def set_params_properties_from_controller(self, params_: dict):
         '''
@@ -97,7 +115,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         Recién una vez seteados estos valores, se permite al usuario interactuar
         '''
         for name, prm in params_.items():
-            if name != 'ier_i' and name != 'ier_e':
+            if 'ier' not in name:
                 self.params[name].value_min = prm.value_min
                 self.params[name].value_max = prm.value_max
                 self.params[name].value_default = prm.value_default
@@ -265,12 +283,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         y_lead = data[:, 1]
         if x_lead[-1] >= time_span:
             self.gtime_ini = time.time()
-
-        trail_idx = np.argmax(x_lead > x_lead[-10] - time_span)
-        x_trail = x_lead[trail_idx:]
-        x_trail = x_trail - x_trail[0] + x_lead[-1] + time_span / 90
-        y_trail = y_lead[trail_idx:]
-
+        try:
+            trail_idx = np.argmax(x_lead > x_lead[-10] - time_span)
+            x_trail = x_lead[trail_idx:]
+            x_trail = x_trail - x_trail[0] + x_lead[-1] + time_span / 90
+            y_trail = y_lead[trail_idx:]
+        except IndexError:
+            x_lead, y_lead, x_trail, y_trail = [], [], [], []
         return x_lead, y_lead, x_trail, y_trail
 
 

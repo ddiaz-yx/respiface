@@ -53,10 +53,10 @@ def parse_data(n_samples, hex_string, timestamp):
 
 
 class DataProxy(QThread):
-    signal_params_set = pyqtSignal(
+    signal_params_properties_set = pyqtSignal(
         dict)  # Se emite una vez hayan sido configurados todos los parámetros (min, max y default)
-    signal_new_param_value = pyqtSignal(
-        Parameter)  # Se emite cuando se desde el socket llega un nuevo valor para un parámetro
+    signal_new_param_values = pyqtSignal(
+        dict)  # Se emite cuando se desde el socket llega un nuevo valor para un parámetro
 
     def __init__(self, cur_pressure: deque, cur_flow: deque, total_flow: deque, user_set_param: deque):
         QThread.__init__(self)
@@ -85,13 +85,13 @@ class DataProxy(QThread):
     def send_new_param_value(self):
         """
         Periodically checks the deque for new params set by the user
-        It can receybe either a Parameter object or a dictionay of Parameters
+        It can receive either a Parameter object or a dictionay of Parameters
         """
         while True:
             if len(self.user_set_param):
                 msg = bytes("set_conf?".encode('ascii'))
                 p = self.user_set_param.popleft()
-                if isinstance(p, Parameter):
+                if isinstance(p, Parameter): # If it is a single parameter, put it inside a dict
                     p = {f'{p.name}': p}
                 for param in p.values():
                     if param.name == 'ier':
@@ -101,7 +101,9 @@ class DataProxy(QThread):
                     else:
                         val = PARAM_TYPES[param.name](param.value)
                         msg += bytes(f"{param.name}={val}".encode('ascii'))
-                msg = msg + bytes("\n".encode('ascii'))  # Adds end-line
+                    msg += bytes('&'.encode('ascii'))
+
+                msg = msg[:-1] + bytes("\n".encode('ascii'))  # Removes last '&' and adds end-line
                 print(f"Sending {msg} to socket")
                 if self.connection is not None:
                     self.connection.sendall(msg)
@@ -115,11 +117,15 @@ class DataProxy(QThread):
         while not self.stop.is_set():
             print("Waiting for connections from unix socket ...")
             self.connection, client_address = self.socket.accept()
-            print("Pair connected !!!")
+            print("Peer connected !!!")
             while not self.stop.is_set():
-                data = self.connection.recv(2048)
+                try:
+                    data = self.connection.recv(2048)
+                except ConnectionResetError:
+                    print("Connection reset by peer")
+                    break
                 if data == b'':  # Se cerró la conexion
-                    print("Conection closed by client")
+                    print("Connection reset by peer")
                     break
                 else:
                     self.process_socket_data(data)
@@ -133,7 +139,7 @@ class DataProxy(QThread):
             if p.value_max is None or p.value_min is None or p.value_default is None:
                 all_set = False
         if all_set:
-            self.signal_params_set.emit(self.params)
+            self.signal_params_properties_set.emit(self.params)
 
     def ack(self):
         self.connection.sendall(bytes('+ack\n'.encode('ascii')))
@@ -146,9 +152,10 @@ class DataProxy(QThread):
             if o.path == 'reset_conf':
                 print("reset_conf")
             elif o.path == 'set_conf':
+                print("New parameter value received")
                 for param, value in data.items():
                     self.params[param].value = float(value)
-                    self.signal_new_param_value.emit(self.params[param])
+                self.signal_new_param_values.emit(self.params)
                 self.ack()
             elif o.path == 'def_conf':
                 for param, value in data.items():
