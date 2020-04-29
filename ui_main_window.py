@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'main_window.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.3
+# Created by: PyQt5 UI code generator 5.14.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -379,7 +379,18 @@ class Ui_MainWindow(object):
         self.gridLayout = QtWidgets.QGridLayout()
         self.gridLayout.setObjectName("gridLayout")
         self.layout_flow = QtWidgets.QHBoxLayout()
+        self.layout_flow.setSpacing(0)
         self.layout_flow.setObjectName("layout_flow")
+        self.lbl_plot_bottom_title = VerticalLabel(self.centralwidget)
+        self.lbl_plot_bottom_title.setMaximumSize(QtCore.QSize(15, 16777215))
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.lbl_plot_bottom_title.setFont(font)
+        self.lbl_plot_bottom_title.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.lbl_plot_bottom_title.setAlignment(QtCore.Qt.AlignCenter)
+        self.lbl_plot_bottom_title.setObjectName("lbl_plot_bottom_title")
+        self.layout_flow.addWidget(self.lbl_plot_bottom_title)
         self.f_widget = LayoutWidget(self.centralwidget)
         self.f_widget.setObjectName("f_widget")
         self.layout_flow.addWidget(self.f_widget)
@@ -394,7 +405,17 @@ class Ui_MainWindow(object):
         self.verticalLayout_13.addWidget(self.label_24)
         self.gridLayout.addLayout(self.verticalLayout_13, 1, 2, 1, 1)
         self.layout_pressure = QtWidgets.QHBoxLayout()
+        self.layout_pressure.setSpacing(0)
         self.layout_pressure.setObjectName("layout_pressure")
+        self.lbl_plot_top_title = VerticalLabel(self.centralwidget)
+        self.lbl_plot_top_title.setMaximumSize(QtCore.QSize(15, 16777215))
+        font = QtGui.QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.lbl_plot_top_title.setFont(font)
+        self.lbl_plot_top_title.setAlignment(QtCore.Qt.AlignCenter)
+        self.lbl_plot_top_title.setObjectName("lbl_plot_top_title")
+        self.layout_pressure.addWidget(self.lbl_plot_top_title)
         self.p_widget = LayoutWidget(self.centralwidget)
         self.p_widget.setObjectName("p_widget")
         self.layout_pressure.addWidget(self.p_widget)
@@ -543,8 +564,10 @@ class Ui_MainWindow(object):
         self.label_15.setText(_translate("MainWindow", "<html><head/><body><p>FiO<span style=\" vertical-align:sub;\">2</span></p></body></html>"))
         self.lbl_fio2.setText(_translate("MainWindow", "0"))
         self.label_16.setText(_translate("MainWindow", "<html><head/><body><p align=\"center\">% [50.0]</p></body></html>"))
+        self.lbl_plot_bottom_title.setText(_translate("MainWindow", "TextLabel"))
         self.label_22.setText(_translate("MainWindow", "Alerta 1"))
         self.label_24.setText(_translate("MainWindow", "Alerta 2"))
+        self.lbl_plot_top_title.setText(_translate("MainWindow", "TextLabel"))
         self.label_17.setText(_translate("MainWindow", "Alerta 1"))
         self.label_18.setText(_translate("MainWindow", "Alerta 2"))
         self.pushButton.setText(_translate("MainWindow", "Alarma"))
@@ -558,3 +581,4 @@ class Ui_MainWindow(object):
         self.pushButton_2.setText(_translate("MainWindow", "Pant. bloq."))
         self.btnConfig.setText(_translate("MainWindow", "CONFIGURAR"))
 from pyqtgraph import LayoutWidget
+from qt_mods import VerticalLabel

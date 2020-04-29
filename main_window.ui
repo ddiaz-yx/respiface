@@ -749,6 +749,34 @@
      <layout class="QGridLayout" name="gridLayout">
       <item row="1" column="0">
        <layout class="QHBoxLayout" name="layout_flow">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="VerticalLabel" name="lbl_plot_bottom_title">
+          <property name="maximumSize">
+           <size>
+            <width>15</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
         <item>
          <widget class="LayoutWidget" name="f_widget" native="true"/>
         </item>
@@ -774,6 +802,31 @@
       </item>
       <item row="0" column="0">
        <layout class="QHBoxLayout" name="layout_pressure">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="VerticalLabel" name="lbl_plot_top_title">
+          <property name="maximumSize">
+           <size>
+            <width>15</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
         <item>
          <widget class="LayoutWidget" name="p_widget" native="true"/>
         </item>
@@ -1049,6 +1102,11 @@
    <extends>QWidget</extends>
    <header>pyqtgraph.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>VerticalLabel</class>
+   <extends>QLabel</extends>
+   <header>qt_mods.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

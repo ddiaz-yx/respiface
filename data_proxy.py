@@ -16,7 +16,7 @@ import struct
 from parameter import Parameter
 from threading import Thread
 
-SOCKET_ADDRESS = "/tmp/my_socket"
+SOCKET_ADDRESS = "/home/mich/my_socket"
 MAX_DATA_POINTS = 6000  # 60 segundos a 100 Hz
 SAMPLE_PERIOD = 0.01  # seconds
 
@@ -47,7 +47,7 @@ def parse_data(n_samples, hex_string, timestamp):
     iter_ = struct.iter_unpack('>d', dec)
     for i in range(0, n_samples):
         val, = next(iter_)
-        data.append([t, val])
+        data.extend([t, val])
         t = t + SAMPLE_PERIOD
     return data
 
@@ -70,6 +70,8 @@ class DataProxy(QThread):
         self.dq_tf = total_flow
         self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.socket.bind(SOCKET_ADDRESS)
+        #self.socket = socket.socket()
+        #self.socket.bind(('', 5040))
         self.stop = Event()
         self.connection = None
         self.socket.listen(1)
@@ -113,6 +115,7 @@ class DataProxy(QThread):
         while not self.stop.is_set():
             print("Waiting for connections from unix socket ...")
             self.connection, client_address = self.socket.accept()
+            print("Pair connected !!!")
             while not self.stop.is_set():
                 data = self.connection.recv(2048)
                 if data == b'':  # Se cerró la conexion
@@ -168,8 +171,8 @@ class DataProxy(QThread):
                 cp_vals = parse_data(num_samples, data['cp'], timestamp)
                 cf_vals = parse_data(num_samples, data['cf'], timestamp)
                 tf_vals = parse_data(num_samples, data['tf'], timestamp)
-                self.dq_cp.extend(cp_vals)
-                self.dq_cf.extend(cf_vals)
-                self.dq_tf.extend(tf_vals)
+                self.dq_cp.append(cp_vals)
+                self.dq_cf.append(cf_vals)
+                self.dq_tf.append(tf_vals)
         except ValueError as e:
             print(e)
