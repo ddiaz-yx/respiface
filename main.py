@@ -71,7 +71,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.frm_gscale.mousePressEvent = partial(self.new_scale)
 
         self.plot_update_timer.timeout.connect(self.draw_plots)
-        self.plot_update_timer.start(50)
+        self.plot_update_timer.start(0)
 
         self.proxy = DataProxy(self.dq_cp, self.dq_cf, self.dq_tf, self.dq_user_set_param)
         self.proxy.start()
@@ -139,7 +139,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.frm_vtidal.setStyleSheet(top_frames_style)
         self.frm_op_mode.setStyleSheet(top_frames_style)
         self.frm_gscale.setStyleSheet(grey_frame_style)
-
 
     def set_up_plots(self):
         # TODO: deshabilitar botones por completo (no solamente el ajuste en los ejes)
@@ -264,34 +263,48 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.update_param_labels()
 
     def draw_plots(self):
-        t1 = Thread(target=self.draw_async)
+        t1 = Thread(target=self.draw_top)
+        t2 = Thread(target=self.draw_bottom)
         t1.start()
+        t2.start()
 
-    def draw_async(self):
+    def draw_top(self):
         if not len(self.dq_cf):
             return
-        x_lead, y_lead, x_trail, y_trail = self.time_arrange_data(np.array(self.dq_cp))
-        self.p_curve_trail.setData(x_trail, y_trail, _callSync='off')
-        self.p_curve_lead.setData(x_lead, y_lead, _callSync='off')
-        x_lead, y_lead, x_trail, y_trail = self.time_arrange_data(np.array(self.dq_tf))
-        self.f_curve_trail.setData(x_trail, y_trail, _callSync='off')
-        self.f_curve_lead.setData(x_lead, y_lead, _callSync='off')
+        x_lead, y_lead, x_trail, y_trail = self.time_arrange_data(np.array(self.dq_cp), edge_value=-1)
+        #self.p_curve_trail.setData(x_trail, y_trail, _callSync='off')
+        #self.p_curve_lead.setData(x_lead, y_lead, _callSync='off')
+        self.p_curve_lead.setData(np.append(x_lead, x_trail), np.append(y_lead, y_trail), _callSync='off')
 
-    def time_arrange_data(self, data):
+    def draw_bottom(self):
+        if not len(self.dq_cf):
+            return
+        x_lead, y_lead, x_trail, y_trail = self.time_arrange_data(np.array(self.dq_tf), edge_value=0)
+        #self.f_curve_trail.setData(x_trail, y_trail, _callSync='off')
+        #self.f_curve_lead.setData(x_lead, y_lead, _callSync='off')
+        self.f_curve_lead.setData(np.append(x_lead, x_trail), np.append(y_lead, y_trail), _callSync='off')
+
+    def time_arrange_data(self, data, edge_value):
         time_span = self.gscale_options[self.gscale_idx]
         x_lead = data[:, 0] - self.gtime_ini
         y_lead = data[:, 1]
         if x_lead[-1] >= time_span:
             self.gtime_ini = time.time()
         try:
-            trail_idx = np.argmax(x_lead > x_lead[-10] - time_span)
+            trail_idx = np.argmax(x_lead > x_lead[-1] - time_span)
             x_trail = x_lead[trail_idx:]
-            x_trail = x_trail - x_trail[0] + x_lead[-1] + time_span / 90
+            x_trail = x_trail - x_trail[0] + x_lead[-1] #+ time_span / 100
             y_trail = y_lead[trail_idx:]
+
+            #flancos
+            x_lead[-1] = x_lead[-2] + 0.005
+            y_lead[-1] = edge_value
+            x_trail[0] = x_trail[1] - 0.005
+            y_trail[0] = edge_value
+
         except IndexError:
             x_lead, y_lead, x_trail, y_trail = [], [], [], []
         return x_lead, y_lead, x_trail, y_trail
-
 
 app = QtWidgets.QApplication(sys.argv)
 with open("style.qss", 'r') as style_file:
