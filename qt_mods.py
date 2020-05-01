@@ -11,7 +11,7 @@ class VerticalLabel(QLabel):
 
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
-        painter.translate(15, self.height()-40)
+        painter.translate(11, self.height()-40)
         painter.rotate(-90)
         if self.text:
             painter.drawText(0, 0, self.text)

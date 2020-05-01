@@ -15,6 +15,7 @@ from urllib import parse
 import struct
 from parameter import Parameter
 from threading import Thread
+import logging
 
 SOCKET_ADDRESS = "/home/mich/my_socket"
 MAX_DATA_POINTS = 6000  # 60 segundos a 100 Hz
@@ -60,6 +61,7 @@ class DataProxy(QThread):
 
     def __init__(self, cur_pressure: deque, cur_flow: deque, total_flow: deque, user_set_param: deque):
         QThread.__init__(self)
+        self.logger = logging.getLogger('gui')
         try:
             os.unlink(SOCKET_ADDRESS)
         except OSError:
@@ -104,7 +106,7 @@ class DataProxy(QThread):
                     msg += bytes('&'.encode('ascii'))
 
                 msg = msg[:-1] + bytes("\n".encode('ascii'))  # Removes last '&' and adds end-line
-                print(f"Sending {msg} to socket")
+                self.logger.info(f"Sending {msg} to socket")
                 if self.connection is not None:
                     self.connection.sendall(msg)
             else:
@@ -115,20 +117,21 @@ class DataProxy(QThread):
         ts.start()
 
         while not self.stop.is_set():
-            print("Waiting for connections from unix socket ...")
+            self.logger.info("Waiting for connections from unix socket ...")
             self.connection, client_address = self.socket.accept()
-            print("Peer connected !!!")
+            self.logger.info("Peer connected !!!")
             while not self.stop.is_set():
                 try:
                     data = self.connection.recv(2048)
                 except ConnectionResetError:
-                    print("Connection reset by peer")
+                    self.logger.warning("Connection reset by peer")
                     break
                 if data == b'':  # Se cerró la conexion
-                    print("Connection reset by peer")
+                    self.logger.warning("Connection reset by peer")
                     break
                 else:
                     self.process_socket_data(data)
+                    time.sleep(0.001)
 
     def check_params(self):
         """
@@ -152,7 +155,6 @@ class DataProxy(QThread):
             if o.path == 'reset_conf':
                 print("reset_conf")
             elif o.path == 'set_conf':
-                print("New parameter value received")
                 for param, value in data.items():
                     self.params[param].value = float(value)
                 self.signal_new_param_values.emit(self.params)
@@ -182,4 +184,4 @@ class DataProxy(QThread):
                 self.dq_cf.append(cf_vals)
                 self.dq_tf.append(tf_vals)
         except ValueError as e:
-            print(e)
+            self.logger.exception("")

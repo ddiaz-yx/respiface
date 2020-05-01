@@ -88,3 +88,27 @@ modes:
       adjustable: True
       default: 7 #cmH2O
 default_mode: vcv
+logging:
+  version: 1
+  disable_existing_loggers: true
+  formatters:
+    simple:
+      format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  handlers:
+    root_handler:
+      class: logging.NullHandler
+    my_handler:
+      class: logging.handlers.TimedRotatingFileHandler
+      level: DEBUG
+      formatter: simple
+      filename: logs/respiface.log
+      when: midnight
+      interval: 1
+      backupCount: 7
+      encoding: utf-8
+  loggers:
+    gui:
+      handlers: [my_handler]
+  root:
+    level: DEBUG
+    handlers: [root_handler]
