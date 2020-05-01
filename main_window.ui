@@ -63,7 +63,7 @@
        <number>1</number>
       </property>
       <item>
-       <widget class="QFrame" name="frm_pmax">
+       <widget class="QFrame" name="frm_cpmax">
         <property name="frameShape">
          <enum>QFrame::Panel</enum>
         </property>
@@ -108,7 +108,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="lbl_pmax">
+          <widget class="QLabel" name="lbl_cpmax">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
              <horstretch>0</horstretch>
@@ -147,7 +147,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QFrame" name="frm_pmedia">
+       <widget class="QFrame" name="frm_cpavg">
         <property name="frameShape">
          <enum>QFrame::Panel</enum>
         </property>
@@ -195,7 +195,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="lbl_pmedia">
+          <widget class="QLabel" name="lbl_cpavg">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
              <horstretch>0</horstretch>
@@ -483,7 +483,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QFrame" name="frm_vtidal">
+       <widget class="QFrame" name="frm_tvm">
         <property name="frameShape">
          <enum>QFrame::Panel</enum>
         </property>
@@ -570,7 +570,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QFrame" name="frm_flujototal">
+       <widget class="QFrame" name="frm_tf">
         <property name="frameShape">
          <enum>QFrame::Panel</enum>
         </property>
@@ -618,7 +618,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="lbl_flujoaire">
+          <widget class="QLabel" name="lbl_tf">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
              <horstretch>0</horstretch>

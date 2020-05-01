@@ -19,17 +19,19 @@ from data_proxy import DataProxy
 import time
 
 CONFIG_FILE = "config.yaml"
-COLOR_PRESSURE = "FFC107" # "EEEE88"
-COLOR_FLOW = "00AA33" # "44FF88"
+
+DARK_BACKGROUND = "#222222"
+WIDGET_BACKGROUND = "#454545"
+YELLOW = "#FDC76D"
+BLUE = "#47AFB2"
+GREEN = "#00AE65"
 MAX_DATA_POINTS = 3000  # 60 segundos a 50 Hz
 UNDER_CURVE_ALPHA = "88"
 
-top_frames_style = '''QFrame{
-                        background: #DDDDDD;
-                    }
-                    QLabel{
-                        color: black;
-                    }'''
+top_frames_style = "QFrame{background: " + WIDGET_BACKGROUND + "; border-radius: 8px;} "
+css_lbl_yellow = "QLabel{color: " + YELLOW + ";} "
+css_lbl_green = "QLabel{color: " + GREEN + ";}; "
+css_lbl_blue = "QLabel{color: " + BLUE + ";}; "
 
 grey_frame_style = '''QFrame{
                         background: lightgrey;
@@ -51,7 +53,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.params = dict()  # Dict[str, Parameter]
         self.read_config()
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
-        self.setStyleSheet("QMainWindow {background-color: white};")
         self.plot_update_timer = QtCore.QTimer()
         self.test_timer = QtCore.QTimer()
 
@@ -64,10 +65,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.frm_peep.mousePressEvent = partial(self.adjust_param, ParamEnum.peep)
         self.frm_fio2.mousePressEvent = partial(self.adjust_param, ParamEnum.fio2, )
-        self.frm_flujototal.mousePressEvent = partial(self.adjust_param, ParamEnum.flujoaire, )
+        self.frm_tf.mousePressEvent = partial(self.adjust_param, ParamEnum.flujoaire, )
         self.frm_ratioie.mousePressEvent = partial(self.adjust_param, ParamEnum.ier, )
         self.frm_rpm.mousePressEvent = partial(self.adjust_param, ParamEnum.brpm, )
-        self.frm_vtidal.mousePressEvent = partial(self.adjust_param, ParamEnum.tvm, )
+        self.frm_tvm.mousePressEvent = partial(self.adjust_param, ParamEnum.tvm, )
         self.frm_gscale.mousePressEvent = partial(self.new_scale)
 
         self.plot_update_timer.timeout.connect(self.draw_plots)
@@ -129,22 +130,24 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         del self.splash
 
     def set_styles(self):
-        self.frm_fio2.setStyleSheet(top_frames_style)
-        self.frm_flujototal.setStyleSheet(top_frames_style)
-        self.frm_peep.setStyleSheet(top_frames_style)
-        self.frm_pmax.setStyleSheet(top_frames_style)
-        self.frm_pmedia.setStyleSheet(top_frames_style)
-        self.frm_ratioie.setStyleSheet(top_frames_style)
-        self.frm_rpm.setStyleSheet(top_frames_style)
-        self.frm_vtidal.setStyleSheet(top_frames_style)
+        self.setStyleSheet("QMainWindow {background-color: " + DARK_BACKGROUND + "};")
+        self.frm_cpmax.setStyleSheet(top_frames_style + css_lbl_yellow)
+        self.frm_cpavg.setStyleSheet(top_frames_style + css_lbl_yellow)
+        self.frm_peep.setStyleSheet(top_frames_style + css_lbl_yellow)
+        self.frm_fio2.setStyleSheet(top_frames_style + css_lbl_green)
+        self.frm_tf.setStyleSheet(top_frames_style + css_lbl_green)
+        self.frm_ratioie.setStyleSheet(top_frames_style + css_lbl_green)
+        self.frm_rpm.setStyleSheet(top_frames_style + css_lbl_green)
+        self.frm_tvm.setStyleSheet(top_frames_style + css_lbl_blue)
         self.frm_op_mode.setStyleSheet(top_frames_style)
         self.frm_gscale.setStyleSheet(grey_frame_style)
+
 
     def set_up_plots(self):
         # TODO: deshabilitar botones por completo (no solamente el ajuste en los ejes)
         # PRESION -----------------------------------------------
 
-        self.lbl_plot_top_title.setStyleSheet('QLabel{color: #' + COLOR_PRESSURE + '}')
+        self.lbl_plot_top_title.setStyleSheet('QLabel{color: ' + YELLOW + '}')
         self.lbl_plot_top_title.setText("Presión [cm H2O]")
         self.p_widget.layout.setContentsMargins(0, 0, 0, 0)
         self.view_pressure = RemoteGraphicsView()
@@ -153,42 +156,42 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.plt_pressure.hideButtons()
         self.plt_pressure.setMenuEnabled(False)
         self.plt_pressure.setMouseEnabled(x=False, y=False)
-        self.plt_pressure.getAxis('bottom').setPen({'color': COLOR_PRESSURE, 'width': 1})
-        self.plt_pressure.getAxis('left').setPen({'color': COLOR_PRESSURE, 'width': 1})
+        self.plt_pressure.getAxis('bottom').setPen({'color': YELLOW, 'width': 1})
+        self.plt_pressure.getAxis('left').setPen({'color': YELLOW, 'width': 1})
         self.plt_pressure.getAxis('bottom').setStyle(showValues=False)
         # Esto funcionó para bajar el uso de CPU.
         # Sin embargo obliga a setear manualmente el rango
-        self.plt_pressure.setRange(xRange=[0, 5], yRange=[0, 12], update=True)
+        self.plt_pressure.setRange(xRange=[0, 5], yRange=[0, 15], update=True)
         self.plt_pressure._setProxyOptions(deferGetattr=True)
         self.view_pressure.setCentralItem(self.plt_pressure)
         self.layout_pressure.addWidget(self.view_pressure)
-        self.p_curve_lead = self.plt_pressure.plot([-10], [0], pen={'color': COLOR_PRESSURE, 'width': 1.5},
-                                                   fillLevel=-0.5, brush=COLOR_PRESSURE+UNDER_CURVE_ALPHA)
-        self.p_curve_trail = self.plt_pressure.plot([-10], [0], pen={'color': COLOR_PRESSURE, 'width': 1},
-                                                    fillLevel=-0.5, brush=COLOR_PRESSURE+UNDER_CURVE_ALPHA)
-        self.p_line = self.plt_pressure.addLine(y=110.5, pen={'color': COLOR_PRESSURE, 'width': 0.5})
+        self.p_curve_lead = self.plt_pressure.plot([-10], [0], pen={'color': YELLOW, 'width': 1.5},
+                                                   fillLevel=-0.5, brush=YELLOW + UNDER_CURVE_ALPHA)
+        self.p_curve_trail = self.plt_pressure.plot([-10], [0], pen={'color': YELLOW, 'width': 1},
+                                                    fillLevel=-0.5, brush=YELLOW + UNDER_CURVE_ALPHA)
+        self.p_line = self.plt_pressure.addLine(y=110.5, pen={'color': YELLOW, 'width': 0.5})
 
         # FLUJO -----------------------------------------------
         self.lbl_plot_bottom_title.setText("Flujo [L/min]")
-        self.lbl_plot_bottom_title.setStyleSheet('QLabel{color: #' + COLOR_FLOW + '}')
+        self.lbl_plot_bottom_title.setStyleSheet('QLabel{color: ' + GREEN + '}')
         self.f_widget.layout.setContentsMargins(0, 0, 0, 0)
         self.view_flow = pg.widgets.RemoteGraphicsView.RemoteGraphicsView()
         self.f_widget.addWidget(self.view_flow)
         self.plt_flow: pg.PlotItem = self.view_flow.pg.PlotItem(clipToView=True)
         self.plt_flow.hideButtons()
         self.plt_flow.setMouseEnabled(x=False, y=False)
-        self.plt_flow.getAxis('bottom').setPen({'color': COLOR_FLOW, 'width': 1})
-        self.plt_flow.getAxis('left').setPen({'color': COLOR_FLOW, 'width': 1})
+        self.plt_flow.getAxis('bottom').setPen({'color': GREEN, 'width': 1})
+        self.plt_flow.getAxis('left').setPen({'color': GREEN, 'width': 1})
         # self.plt_flow.getAxis('left').setTicks([-100, 100])
-        self.plt_flow.setRange(xRange=[0, 5], yRange=[-2, 2], update=True)
+        self.plt_flow.setRange(xRange=[0, 5], yRange=[0, 5], update=True)
         self.plt_flow._setProxyOptions(deferGetattr=True)
         self.view_flow.setCentralItem(self.plt_flow)
         self.layout_flow.addWidget(self.view_flow)  # Relleno por mientras
-        self.f_curve_lead = self.plt_flow.plot([-10], [0], pen={'color': COLOR_FLOW, 'width': 1.5}, fillLevel=-0.5,
-                                               brush=COLOR_FLOW+UNDER_CURVE_ALPHA)
-        self.f_curve_trail = self.plt_flow.plot([-10], [0], pen={'color': COLOR_FLOW, 'width': 1}, fillLevel=-0.5,
-                                                brush=COLOR_FLOW+UNDER_CURVE_ALPHA)
-        self.f_line = self.plt_flow.addLine(y=150, pen={'color': COLOR_FLOW, 'width': 0.5})
+        self.f_curve_lead = self.plt_flow.plot([-10], [0], pen={'color': GREEN, 'width': 1.5}, fillLevel=-0.5,
+                                               brush=GREEN + UNDER_CURVE_ALPHA)
+        self.f_curve_trail = self.plt_flow.plot([-10], [0], pen={'color': GREEN, 'width': 1}, fillLevel=-0.5,
+                                                brush=GREEN + UNDER_CURVE_ALPHA)
+        self.f_line = self.plt_flow.addLine(y=150, pen={'color': GREEN, 'width': 0.5})
 
         self.adjust_gscale()
 
@@ -211,8 +214,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         span = self.gscale_options[self.gscale_idx]
         self.lbl_gscale.setText(f"{span} s")
         self.gtime_ini = time.time()
-        self.plt_pressure.setRange(xRange=[0, span], yRange=[0, 12], update=True, padding=0.03)
-        self.plt_flow.setRange(xRange=[0, span], yRange=[-80, 80], update=True, padding=0.03)
+        self.plt_pressure.setRange(xRange=[0, span], update=True, padding=0.03)
+        self.plt_flow.setRange(xRange=[0, span], update=True, padding=0.03)
 
     def read_config(self):
         with open(CONFIG_FILE, 'r') as config_file:
@@ -271,7 +274,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def draw_top(self):
         if not len(self.dq_cf):
             return
-        x_lead, y_lead, x_trail, y_trail = self.time_arrange_data(np.array(self.dq_cp), edge_value=-1)
+        x_lead, y_lead, x_trail, y_trail = self.time_arrange_data(np.array(self.dq_cp), edge_value=-0.5)
         #self.p_curve_trail.setData(x_trail, y_trail, _callSync='off')
         #self.p_curve_lead.setData(x_lead, y_lead, _callSync='off')
         self.p_curve_lead.setData(np.append(x_lead, x_trail), np.append(y_lead, y_trail), _callSync='off')
@@ -279,7 +282,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def draw_bottom(self):
         if not len(self.dq_cf):
             return
-        x_lead, y_lead, x_trail, y_trail = self.time_arrange_data(np.array(self.dq_tf), edge_value=0)
+        x_lead, y_lead, x_trail, y_trail = self.time_arrange_data(np.array(self.dq_cf), edge_value=0)
         #self.f_curve_trail.setData(x_trail, y_trail, _callSync='off')
         #self.f_curve_lead.setData(x_lead, y_lead, _callSync='off')
         self.f_curve_lead.setData(np.append(x_lead, x_trail), np.append(y_lead, y_trail), _callSync='off')
@@ -311,7 +314,7 @@ with open("style.qss", 'r') as style_file:
     app.setStyleSheet(style_file.read())
 
 pg.setConfigOption('antialias', True)
-pg.setConfigOption('background', 'w')
+pg.setConfigOption('background', DARK_BACKGROUND)
 pg.setConfigOption('foreground', 'k')
 
 window = MainWindow()
