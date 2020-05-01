@@ -40,6 +40,14 @@ resp_params:
     default: 5
     step: 1
     format: .0f
+  tf:
+    screen_name: Flujo total
+    units: L/min
+    min: 1
+    max: 10
+    default: 5
+    step: 0.5
+    format: .1f
 gscale: # Escala de tiempo de los graficos
   options: [5, 20, 60]
 modes:

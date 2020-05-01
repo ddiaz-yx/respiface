@@ -12,7 +12,7 @@ class ParamEnum(Enum):
     ier_e = auto()  # E del Ratio I:E
     fio2 = auto()  # FiO2
     gscale = auto()  # Escala de tiempo del gráfico
-    flujoaire = auto()  # Flujo de aire
+    tf = auto()  # Flujo Total
     peep = auto()  # PEEP
     ast = auto()  # Alarm silence time
     mode = auto()  # Modo de operación

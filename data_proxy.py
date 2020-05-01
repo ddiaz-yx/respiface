@@ -30,7 +30,8 @@ PARAM_TYPES = {
     'ast': int,
     'mode': int,
     'tvm': int,
-    'peep': int
+    'peep': int,
+    'tf':float
 }
 PARAM_NAMES = (k for k in PARAM_TYPES)
 
@@ -39,18 +40,6 @@ class OpMode(Enum):
     PCV = 0
     VCV = 1
     SIMV = 2
-
-
-def parse_data(n_samples, hex_string, timestamp):
-    t = timestamp
-    data = []
-    dec = bytearray.fromhex(hex_string)
-    iter_ = struct.iter_unpack('>d', dec)
-    for i in range(0, n_samples):
-        val, = next(iter_)
-        data.extend([t, val])
-        t = t + SAMPLE_PERIOD
-    return data
 
 
 class DataProxy(QThread):
@@ -83,6 +72,21 @@ class DataProxy(QThread):
         self.params = dict()
         for p in PARAM_NAMES:
             self.params[p] = Parameter(name=p)
+
+    def parse_data(self, n_samples, hex_string, timestamp):
+        t = timestamp
+        data = []
+        try:
+            dec = bytearray.fromhex(hex_string)
+        except ValueError as e:
+            self.logger.exception("")
+            return []
+        iter_ = struct.iter_unpack('>d', dec)
+        for i in range(0, n_samples):
+            val, = next(iter_)
+            data.extend([t, val])
+            t = t + SAMPLE_PERIOD
+        return data
 
     def send_new_param_value(self):
         """
@@ -177,9 +181,9 @@ class DataProxy(QThread):
             elif o.path == 'd':
                 num_samples = int(data['n'])
                 timestamp = float(data['ts'])
-                cp_vals = parse_data(num_samples, data['cp'], timestamp)
-                cf_vals = parse_data(num_samples, data['cf'], timestamp)
-                tf_vals = parse_data(num_samples, data['tf'], timestamp)
+                cp_vals = self.parse_data(num_samples, data['cp'], timestamp)
+                cf_vals = self.parse_data(num_samples, data['cf'], timestamp)
+                tf_vals = self.parse_data(num_samples, data['tf'], timestamp)
                 self.dq_cp.append(cp_vals)
                 self.dq_cf.append(cf_vals)
                 self.dq_tf.append(tf_vals)

@@ -19,7 +19,7 @@ from data_proxy import DataProxy
 import time
 from pathlib import Path
 import logging, logging.config
-import gc
+
 
 CONFIG_FILE = "config.yaml"
 
@@ -54,7 +54,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dq_user_set_param = deque()  # cola de parametros seteados por usuario, por enviar al controlador
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
         self.plot_update_timer = QtCore.QTimer()
-        self.test_timer = QtCore.QTimer()
+        self.mem_check_timer = QtCore.QTimer()
 
         self.gscale_options = (5, 20, 60)
         self.gscale_idx = 0  # Indice de gscale options
@@ -65,7 +65,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.frm_peep.mousePressEvent = partial(self.adjust_param, ParamEnum.peep)
         self.frm_fio2.mousePressEvent = partial(self.adjust_param, ParamEnum.fio2, )
-        self.frm_tf.mousePressEvent = partial(self.adjust_param, ParamEnum.flujoaire, )
+        self.frm_tf.mousePressEvent = partial(self.adjust_param, ParamEnum.tf, )
         self.frm_ratioie.mousePressEvent = partial(self.adjust_param, ParamEnum.ier, )
         self.frm_rpm.mousePressEvent = partial(self.adjust_param, ParamEnum.brpm, )
         self.frm_tvm.mousePressEvent = partial(self.adjust_param, ParamEnum.tvm, )
@@ -73,7 +73,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.plot_update_timer.timeout.connect(self.draw_plots)
         self.plot_update_timer.start(50)
-
+        #self.mem_check_timer.timeout.connect(lambda : self.logger.info(f"Mem usage: {psutil.Process(os.getpid()).memory_info().rss}"))
+        #self.mem_check_timer.start(1000)
         self.proxy = DataProxy(self.dq_cp, self.dq_cf, self.dq_tf, self.dq_user_set_param)
         self.proxy.start()
 
