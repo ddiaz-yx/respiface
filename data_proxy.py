@@ -20,6 +20,7 @@ import logging
 SOCKET_ADDRESS = "/home/mich/my_socket"
 MAX_DATA_POINTS = 6000  # 60 segundos a 100 Hz
 SAMPLE_PERIOD = 0.01  # seconds
+SAMPLE_LENGTH_BYTES = 8
 
 PARAM_TYPES = {
     'fio2': float,
@@ -77,10 +78,10 @@ class DataProxy(QThread):
         t = timestamp
         data = []
         try:
-            dec = bytearray.fromhex(hex_string)
+            dec = bytearray.fromhex(hex_string[:n_samples*SAMPLE_LENGTH_BYTES*2])
         except ValueError as e:
-            self.logger.exception("")
-            return []
+            self.logger.exception(f"Error parsing hex-string {hex_string}")
+            return False
         iter_ = struct.iter_unpack('>d', dec)
         for i in range(0, n_samples):
             val, = next(iter_)
@@ -149,7 +150,11 @@ class DataProxy(QThread):
             self.signal_params_properties_set.emit(self.params)
 
     def ack(self):
-        self.connection.sendall(bytes('+ack\n'.encode('ascii')))
+        try:
+            self.connection.sendall(bytes('+ack\n'.encode('ascii')))
+        except ConnectionResetError as e:
+            self.logger.exception("Conection reset")
+
 
     def process_socket_data(self, data):
         try:
@@ -184,8 +189,11 @@ class DataProxy(QThread):
                 cp_vals = self.parse_data(num_samples, data['cp'], timestamp)
                 cf_vals = self.parse_data(num_samples, data['cf'], timestamp)
                 tf_vals = self.parse_data(num_samples, data['tf'], timestamp)
-                self.dq_cp.append(cp_vals)
-                self.dq_cf.append(cf_vals)
-                self.dq_tf.append(tf_vals)
+                if cp_vals:
+                    self.dq_cp.append(cp_vals)
+                if cf_vals:
+                    self.dq_cf.append(cf_vals)
+                if tf_vals:
+                    self.dq_tf.append(tf_vals)
         except ValueError as e:
             self.logger.exception("")

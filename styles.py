@@ -1,0 +1,21 @@
+BLACK = "#000000"
+DARK_BACKGROUND = "#222222"
+WIDGET_BACKGROUND = "#333333"  # "#454545"
+YELLOW = "#F8C630"  # FDC76D"
+BLUE = "#1DD7DC"  # 47AFB2"
+GREEN = "#00C975"  # 00AE65"
+ACCEPT_BUT_BG = WIDGET_BACKGROUND
+ACCEPT_BUT_LABEL = GREEN
+CANCEL_BUT_BG = WIDGET_BACKGROUND
+CANCEL_BUT_LABEL = YELLOW
+RETURN_BUT_BG = WIDGET_BACKGROUND
+RETURN_BUT_LABEL = BLUE
+
+qss_frm_top = "QFrame{background: " + WIDGET_BACKGROUND + "; border-radius: 8px;} "
+qss_lbl_yellow = "QLabel{color: " + YELLOW + ";}; "
+qss_lbl_green = "QLabel{color: " + GREEN + ";}; "
+qss_lbl_blue = "QLabel{color: " + BLUE + ";}; "
+qss_selected_frame = "QFrame{background: lightgrey; border-radius: 8px;} QLabel{color: " + WIDGET_BACKGROUND + ";}; "
+qss_accept_frame = "QFrame{background: " + ACCEPT_BUT_BG + "; border-radius: 8px;} QLabel{color: " + ACCEPT_BUT_LABEL + ";}; "
+qss_cancel_frame = "QFrame{background: " + CANCEL_BUT_BG + "; border-radius: 8px;} QLabel{color: " + CANCEL_BUT_LABEL + ";};"
+qss_return_frame = "QFrame{background: " + RETURN_BUT_BG + "; border-radius: 8px;} QLabel{color: " + RETURN_BUT_LABEL + ";}; "
