@@ -301,7 +301,7 @@
                 <widget class="QLabel" name="lbl_basic_5">
                  <property name="font">
                   <font>
-                   <pointsize>10</pointsize>
+                   <pointsize>12</pointsize>
                   </font>
                  </property>
                  <property name="text">
@@ -349,7 +349,7 @@
                 <widget class="QLabel" name="lbl_sec_2">
                  <property name="font">
                   <font>
-                   <pointsize>10</pointsize>
+                   <pointsize>12</pointsize>
                   </font>
                  </property>
                  <property name="text">
@@ -397,7 +397,7 @@
                 <widget class="QLabel" name="lbl_sec_9">
                  <property name="font">
                   <font>
-                   <pointsize>10</pointsize>
+                   <pointsize>12</pointsize>
                   </font>
                  </property>
                  <property name="text">
@@ -445,7 +445,7 @@
                 <widget class="QLabel" name="lbl_sec_4">
                  <property name="font">
                   <font>
-                   <pointsize>10</pointsize>
+                   <pointsize>12</pointsize>
                   </font>
                  </property>
                  <property name="text">
@@ -493,7 +493,7 @@
                 <widget class="QLabel" name="lbl_basic_2">
                  <property name="font">
                   <font>
-                   <pointsize>10</pointsize>
+                   <pointsize>12</pointsize>
                   </font>
                  </property>
                  <property name="text">
@@ -542,7 +542,7 @@
                 <widget class="QLabel" name="lbl_basic_1">
                  <property name="font">
                   <font>
-                   <pointsize>10</pointsize>
+                   <pointsize>12</pointsize>
                   </font>
                  </property>
                  <property name="text">
@@ -591,7 +591,7 @@
                 <widget class="QLabel" name="lbl_sec_3">
                  <property name="font">
                   <font>
-                   <pointsize>10</pointsize>
+                   <pointsize>12</pointsize>
                   </font>
                  </property>
                  <property name="text">
@@ -639,7 +639,7 @@
                 <widget class="QLabel" name="lbl_sec_1">
                  <property name="font">
                   <font>
-                   <pointsize>10</pointsize>
+                   <pointsize>12</pointsize>
                   </font>
                  </property>
                  <property name="text">
@@ -711,7 +711,7 @@
                 <widget class="QLabel" name="lbl_basic_4">
                  <property name="font">
                   <font>
-                   <pointsize>10</pointsize>
+                   <pointsize>12</pointsize>
                   </font>
                  </property>
                  <property name="text">
@@ -760,7 +760,7 @@
                 <widget class="QLabel" name="lbl_basic_3">
                  <property name="font">
                   <font>
-                   <pointsize>10</pointsize>
+                   <pointsize>12</pointsize>
                   </font>
                  </property>
                  <property name="text">

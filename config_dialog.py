@@ -45,7 +45,7 @@ class ConfigDialog(QDialog, Ui_Dialog):
 
         # Pone los valores actuales en los labels
         for name, param in self.params.items():
-            frame_name = "frm_" + name
+            frame_name = "frm_param_" + name
             f = self.findChild(QFrame, name=frame_name)
             if f:
                 self.get_value_label(f).setText(f"{param.value:{param.value_format}}")
