@@ -13,7 +13,7 @@ from config_dialog import ConfigDialog
 from param_dialog import ParamSetDialog
 from ui_main_window import Ui_MainWindow
 import yaml
-from parameter import Parameter, ParamEnum
+from parameter import Parameter, ParamEnum, OpMode, OpModEnum
 from collections import deque
 from data_proxy import DataProxy
 import time
@@ -34,7 +34,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.logger = logging.getLogger('gui')
         self.logger.info("\n\n*************Iniciando GUI*******************\n")
-        self.params = dict()  # Dict[str, Parameter]
+        self.params = dict()    # Dict of str:Parameter
+        self.modes = dict()     # Dict of str:OpMode
         self.cfg = config_
         self.read_config()
         self.dq_cp = deque([], MAX_DATA_POINTS)
@@ -229,6 +230,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.params[p] = Parameter(name=p, screen_name=screen_name, units=units, min_=min_, max_=max_, step=step,
                                        fmt=fmt, default=default)
 
+        for m in self.cfg["modes"].keys():
+            #TODO
+            assert m in list(OpModEnum.__members__)
+            self.modes[m] = OpMode(name=m)
+
+        self.params['mode'] = Parameter(name='mode')
+        self.params['mode'].value = OpModEnum.vcv.value     #VCV by default upon starting
+
     def adjust_param(self, param_: ParamEnum, event: QMouseEvent):
         '''
         Adjustment of single params ( by clicking its frame in the main screen)
@@ -250,6 +259,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if result:
             self.params = copy.deepcopy(dialog_cfg.params)
             self.dq_user_set_param.append(self.params)  # Envia el nuevo valor al controlador
+            print(f"Modo: {self.params['mode'].value}")
         self.update_param_labels()
 
     def draw_plots(self):

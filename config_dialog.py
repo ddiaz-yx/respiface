@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import QDialog, QFrame, QLabel
 from PyQt5 import QtCore, Qt
 
 from functools import partial
-from parameter import Parameter
+from parameter import Parameter, OpModEnum
 import copy
 import styles as st
 
@@ -31,7 +31,6 @@ class ConfigDialog(QDialog, Ui_Dialog):
         for f in self.findChildren(QFrame):
             if f.objectName().startswith("frm"):
                 f.mousePressEvent = partial(self.frame_pressed, f)
-        self.selected_op_mode = ""
         self.selected_param: Parameter = None
         self.selected_param_frame = QFrame()
         self.horizontalSlider.valueChanged.connect(self.slider_value_changed)
@@ -42,6 +41,9 @@ class ConfigDialog(QDialog, Ui_Dialog):
         self.frm_cancelar.mousePressEvent = partial(self.frm_cancelar_pressed)
         self.frm_volver.mousePressEvent = partial(self.frm_volver_pressed)
         self.uncommited_change = False  # flag para indica que se cambió el valor de un parámetro, pero no se ha guardado
+        self.frm_param_op_mode_pcv.mousePressEvent = partial(self.frm_param_op_mode_pcv_pressed)
+        self.frm_param_op_mode_vcv.mousePressEvent = partial(self.frm_param_op_mode_vcv_pressed)
+
 
         # Pone los valores actuales en los labels
         for name, param in self.params.items():
@@ -64,10 +66,21 @@ class ConfigDialog(QDialog, Ui_Dialog):
         self.frm_aceptar.setStyleSheet(st.qss_frm_but_enabled)
         self.frm_cancelar.setStyleSheet(st.qss_frm_but_enabled)
         self.frm_volver.setStyleSheet(st.qss_frm_but_enabled)
+        self.frm_param_op_mode_simv.hide()
         frames = self.findChildren(QFrame)
         for f in frames:
             if f.objectName().startswith('frm_param_'):
                 f.setStyleSheet(st.qss_frm_top)
+
+    def frm_param_op_mode_pcv_pressed(self, event: QMouseEvent):
+        self.params['mode'].value = OpModEnum.pcv.value
+        self.frm_param_op_mode_pcv.setStyleSheet(st.qss_frm_selected)
+        self.frm_param_op_mode_vcv.setStyleSheet(st.qss_frm_top)
+
+    def frm_param_op_mode_vcv_pressed(self, event: QMouseEvent):
+        self.params['mode'].value = OpModEnum.vcv.value
+        self.frm_param_op_mode_vcv.setStyleSheet(st.qss_frm_selected)
+        self.frm_param_op_mode_pcv.setStyleSheet(st.qss_frm_top)
 
     def frm_aceptar_pressed(self, event: QMouseEvent):
         if self.selected_param is not None:
@@ -101,6 +114,7 @@ class ConfigDialog(QDialog, Ui_Dialog):
             self.frm_aceptar.setStyleSheet(st.qss_frm_but_enabled)
             self.frm_cancelar.setEnabled(True)
             self.frm_cancelar.setStyleSheet(st.qss_frm_but_enabled)
+            self.frm_op_mode.setDisabled(True)
         else:
             self.btn_left_arrow.hide()
             self.btn_right_arrow.hide()
@@ -111,6 +125,7 @@ class ConfigDialog(QDialog, Ui_Dialog):
             self.frm_aceptar.setStyleSheet(st.qss_frm_but_disbled)
             self.frm_cancelar.setDisabled(True)
             self.frm_cancelar.setStyleSheet(st.qss_frm_but_disbled)
+            self.frm_op_mode.setEnabled(True)
 
         self.btn_left_arrow.setEnabled(enabled)
         self.btn_right_arrow.setEnabled(enabled)

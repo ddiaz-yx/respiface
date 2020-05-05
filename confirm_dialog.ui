@@ -27,7 +27,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QLabel" name="label">
+    <widget class="QLabel" name="lbl_text">
      <property name="font">
       <font>
        <pointsize>16</pointsize>
@@ -44,21 +44,36 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QPushButton" name="btnAceptar">
+      <widget class="QFrame" name="frm_yes">
        <property name="minimumSize">
         <size>
          <width>100</width>
          <height>80</height>
         </size>
        </property>
-       <property name="font">
-        <font>
-         <pointsize>16</pointsize>
-        </font>
+       <property name="frameShape">
+        <enum>QFrame::Box</enum>
        </property>
-       <property name="text">
-        <string>Si</string>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
        </property>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="font">
+           <font>
+            <pointsize>18</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Si</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </item>
      <item>
@@ -75,21 +90,36 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="btnCancelar">
+      <widget class="QFrame" name="frm_no">
        <property name="minimumSize">
         <size>
          <width>100</width>
          <height>80</height>
         </size>
        </property>
-       <property name="font">
-        <font>
-         <pointsize>16</pointsize>
-        </font>
+       <property name="frameShape">
+        <enum>QFrame::Box</enum>
        </property>
-       <property name="text">
-        <string>No</string>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
        </property>
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <item>
+         <widget class="QLabel" name="label_3">
+          <property name="font">
+           <font>
+            <pointsize>18</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>No</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </item>
     </layout>

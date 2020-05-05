@@ -95,7 +95,6 @@ modes:
     peep:
       adjustable: True
       default: 7 #cmH2O
-default_mode: vcv
 logging:
   version: 1
   disable_existing_loggers: true

@@ -18,6 +18,11 @@ class ParamEnum(Enum):
     mode = auto()  # Modo de operación
 
 
+class OpModEnum(Enum):
+    pcv = 0
+    vcv = 1
+
+
 class Parameter:
     def __init__(self, name: str = "", screen_name="", units="", min_=None, max_=None, default=None, step=None, adjustable: bool = True, fmt=".1f"):
         self.name = name
@@ -32,3 +37,8 @@ class Parameter:
         self.value = 0
         if name == ParamEnum.ier.name:
             self.value = (0, 0)
+
+
+class OpMode:
+    def __init__(self, name):
+        self.name = name
