@@ -54,15 +54,16 @@ class ConfigDialog(QDialog, Ui_Dialog):
         self.line.hide()
         self.setStyleSheet("background-color: " + st.BLACK + "; color: lightgrey;")
         self.frm_params_auto.setStyleSheet(st.qss_frm_top)
-        self.frm_op_mode.setStyleSheet(".QFrame{background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(51, 51, 51, 255), stop:1 rgba(0, 0, 0, 255));}")
-        self.frm_buttons.setStyleSheet(".QFrame{background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1, stop:0 rgba(51, 51, 51, 255), stop:1 rgba(0, 0, 0, 255));}")
+        self.frm_op_mode.setStyleSheet(st.qss_frm_group)
+        self.frm_buttons.setStyleSheet(st.qss_frm_group)
+        self.frm_values.setStyleSheet(st.qss_frm_group)
         self.lbl_title_op_mode.setStyleSheet("background-color: rgba(0, 0, 0, 0)")
         self.lbl_title_basic_params.setStyleSheet("background-color: rgba(0, 0, 0, 0)")
         self.lbl_title_more_params.setStyleSheet("background-color: rgba(0, 0, 0, 0)")
         self.lbl_title_right.setStyleSheet("background-color: rgba(0, 0, 0, 0)")
-        self.frm_aceptar.setStyleSheet(st.qss_accept_frame)
-        self.frm_cancelar.setStyleSheet(st.qss_cancel_frame)
-        self.frm_volver.setStyleSheet(st.qss_return_frame)
+        self.frm_aceptar.setStyleSheet(st.qss_frm_but_enabled)
+        self.frm_cancelar.setStyleSheet(st.qss_frm_but_enabled)
+        self.frm_volver.setStyleSheet(st.qss_frm_but_enabled)
         frames = self.findChildren(QFrame)
         for f in frames:
             if f.objectName().startswith('frm_param_'):
@@ -95,11 +96,21 @@ class ConfigDialog(QDialog, Ui_Dialog):
             self.btn_right_arrow.show()
             self.horizontalSlider.show()
             self.frm_volver.setDisabled(True)
+            self.frm_volver.setStyleSheet(st.qss_frm_but_disbled)
+            self.frm_aceptar.setEnabled(True)
+            self.frm_aceptar.setStyleSheet(st.qss_frm_but_enabled)
+            self.frm_cancelar.setEnabled(True)
+            self.frm_cancelar.setStyleSheet(st.qss_frm_but_enabled)
         else:
             self.btn_left_arrow.hide()
             self.btn_right_arrow.hide()
             self.horizontalSlider.hide()
             self.frm_volver.setEnabled(True)
+            self.frm_volver.setStyleSheet(st.qss_frm_but_enabled)
+            self.frm_aceptar.setDisabled(True)
+            self.frm_aceptar.setStyleSheet(st.qss_frm_but_disbled)
+            self.frm_cancelar.setDisabled(True)
+            self.frm_cancelar.setStyleSheet(st.qss_frm_but_disbled)
 
         self.btn_left_arrow.setEnabled(enabled)
         self.btn_right_arrow.setEnabled(enabled)
@@ -157,7 +168,7 @@ class ConfigDialog(QDialog, Ui_Dialog):
                 return
             elif not self.uncommited_change:
                 self.unselect_child_frames(frame.parent())
-                frame.setStyleSheet(st.qss_selected_frame + st.qss_lbl_yellow)
+                frame.setStyleSheet(st.qss_frm_selected + st.qss_lbl_yellow)
                 self.adjusting(True)
                 self.selected_param_frame = frame
                 self.selected_param = self.params[frame.objectName().replace("frm_param_", "")]
