@@ -283,7 +283,7 @@
              <number>8</number>
             </property>
             <item row="5" column="0">
-             <widget class="QFrame" name="frm_param_flujoaire">
+             <widget class="QFrame" name="frm_param_ier">
               <property name="frameShape">
                <enum>QFrame::WinPanel</enum>
               </property>
@@ -305,7 +305,7 @@
                   </font>
                  </property>
                  <property name="text">
-                  <string>Etc.</string>
+                  <string>Ratio I:E</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -320,7 +320,7 @@
                   </font>
                  </property>
                  <property name="text">
-                  <string>0</string>
+                  <string>0:0</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -353,7 +353,7 @@
                   </font>
                  </property>
                  <property name="text">
-                  <string>TextLabel</string>
+                  <string>_</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -368,7 +368,7 @@
                   </font>
                  </property>
                  <property name="text">
-                  <string>20</string>
+                  <string>_</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -401,7 +401,7 @@
                   </font>
                  </property>
                  <property name="text">
-                  <string>TextLabel</string>
+                  <string>_</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -416,7 +416,7 @@
                   </font>
                  </property>
                  <property name="text">
-                  <string>50</string>
+                  <string>_</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -449,7 +449,7 @@
                   </font>
                  </property>
                  <property name="text">
-                  <string>TextLabel</string>
+                  <string>_</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -464,7 +464,7 @@
                   </font>
                  </property>
                  <property name="text">
-                  <string>40</string>
+                  <string>_</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -595,7 +595,7 @@
                   </font>
                  </property>
                  <property name="text">
-                  <string>TextLabel</string>
+                  <string>_</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -610,7 +610,7 @@
                   </font>
                  </property>
                  <property name="text">
-                  <string>30</string>
+                  <string>_</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -643,7 +643,7 @@
                   </font>
                  </property>
                  <property name="text">
-                  <string>TextLabel</string>
+                  <string>_</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -658,7 +658,7 @@
                   </font>
                  </property>
                  <property name="text">
-                  <string>10</string>
+                  <string>_</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -716,7 +716,7 @@
                  </property>
                  <property name="text">
                   <string>Conc.O2
-%</string>
+[%]</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -1189,22 +1189,39 @@
           <number>4</number>
          </property>
          <item>
-          <widget class="QPushButton" name="btn_left_arrow">
+          <widget class="QFrame" name="frm_left_arrow">
            <property name="minimumSize">
             <size>
              <width>60</width>
-             <height>40</height>
+             <height>0</height>
             </size>
            </property>
-           <property name="maximumSize">
-            <size>
-             <width>60</width>
-             <height>40</height>
-            </size>
+           <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
            </property>
-           <property name="text">
-            <string>&lt;</string>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
            </property>
+           <layout class="QVBoxLayout" name="verticalLayout_8">
+            <item>
+             <widget class="QLabel" name="label_4">
+              <property name="font">
+               <font>
+                <family>DejaVu Sans</family>
+                <pointsize>26</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>&lt;</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </widget>
          </item>
          <item>
@@ -1221,22 +1238,39 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="btn_right_arrow">
+          <widget class="QFrame" name="frm_right_arrow">
            <property name="minimumSize">
             <size>
              <width>60</width>
-             <height>40</height>
+             <height>0</height>
             </size>
            </property>
-           <property name="maximumSize">
-            <size>
-             <width>60</width>
-             <height>40</height>
-            </size>
+           <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
            </property>
-           <property name="text">
-            <string>&gt;</string>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
            </property>
+           <layout class="QVBoxLayout" name="verticalLayout_9">
+            <item>
+             <widget class="QLabel" name="label_8">
+              <property name="font">
+               <font>
+                <family>DejaVu Sans</family>
+                <pointsize>26</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>&gt;</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </widget>
          </item>
         </layout>

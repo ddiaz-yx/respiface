@@ -33,10 +33,10 @@ class Parameter:
         self.value_max = max_
         self.value_min = min_
         self.value_default = default
+        self.value_as_index = False  #If true, the value is the index of Parameter.options
         self.adjustable = adjustable
         self.value = 0
-        if name == ParamEnum.ier.name:
-            self.value = (0, 0)
+        self.options = ()
 
 
 class OpMode:

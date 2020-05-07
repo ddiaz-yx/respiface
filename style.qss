@@ -34,13 +34,13 @@ QSlider::handle:vertical {
 }
 
 QSlider::groove:horizontal {
-    border:                 1px solid #222;
+    border:                 2px solid darkgray;
     height:                  10px;
     margin:                 12 0px;
 }
 
 QSlider::handle:horizontal {
-    background:             #888888;
+    background:             lightgray;
     border:                 1px solid #666666;
     width:                 25px;
     height:                  40px;

@@ -13,7 +13,7 @@ import os
 from urllib.parse import urlparse
 from urllib import parse
 import struct
-from parameter import Parameter
+from parameter import Parameter, ParamEnum
 from threading import Thread
 import logging
 
@@ -25,9 +25,9 @@ SAMPLE_LENGTH_BYTES = 8
 PARAM_TYPES = {
     'fio2': float,
     'brpm': int,
-    'ier': int,
-    'ier_i': int,
-    'ier_e': int,
+    'ier': str,
+    'ier_i': float,
+    'ier_e': float,
     'ast': int,
     'mode': int,
     'tvm': int,
@@ -101,9 +101,9 @@ class DataProxy(QThread):
                 if isinstance(p, Parameter): # If it is a single parameter, put it inside a dict
                     p = {f'{p.name}': p}
                 for param in p.values():
-                    if param.name == 'ier':
-                        val_i = PARAM_TYPES[param.name](param.value[0])
-                        val_e = PARAM_TYPES[param.name](param.value[1])
+                    if param.name == ParamEnum.ier.name:
+                        val_i = PARAM_TYPES[param.name](param.options[param.value].split(':')[0])
+                        val_e = PARAM_TYPES[param.name](param.options[param.value].split(':')[1])
                         msg += bytes(f"ier_i={val_i}&ier_e={val_e}".encode('ascii'))
                     else:
                         val = PARAM_TYPES[param.name](param.value)

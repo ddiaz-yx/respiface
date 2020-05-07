@@ -183,13 +183,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.adjust_gscale()
 
     def update_param_labels(self):
+        if self.params['mode'].value == OpModEnum.vcv.value:
+            self.lbl_op_mode.setText("VCV")
+        elif self.params['mode'].value == OpModEnum.pcv.value:
+            self.lbl_op_mode.setText("PCV")
+
         for name, p in self.params.items():
             label = self.findChild(QLabel, name="lbl_" + name)
             if label:
-                if name == "ier":
-                    label.setText(f"{p.value[0]:{p.value_format[0]}}:{p.value[1]:{p.value_format[1]}}")
+                if p.value_as_index:
+                    label.setText(f"{p.options[p.value]:{p.value_format}}")
                 else:
-                    print(f"Value: {p.value}  Format:{p.value_format}")
                     label.setText(f"{p.value:{p.value_format}}")
 
     def new_scale(self, event: QMouseEvent):
@@ -219,6 +223,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             step = self.cfg["resp_params"][p]["step"]
             default = self.cfg["resp_params"][p]["default"]
             units = self.cfg["resp_params"][p]["units"]
+            options = None
+            try:
+                options = tuple(self.cfg["resp_params"][p]["options"])
+                print(options)
+            except KeyError:
+                pass
 
             min_ = tuple(float(v) for v in min_.split(",")) if (isinstance(min_, str) and "," in min_) else float(min_)
             max_ = tuple(float(v) for v in max_.split(",")) if (isinstance(max_, str) and "," in max_) else float(max_)
@@ -229,6 +239,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
             self.params[p] = Parameter(name=p, screen_name=screen_name, units=units, min_=min_, max_=max_, step=step,
                                        fmt=fmt, default=default)
+            if options is not None:
+                self.params[p].options = options
+                self.params[p].value_as_index = True
+
+        if ParamEnum.ier.name in self.params.keys():
+            options = self.params[ParamEnum.ier.name].options
+            self.params[ParamEnum.ier.name].options = tuple((f"{v.split(':')[0].rjust(3)}:{v.split(':')[1].rjust(3)}" for v in options))
+            print(self.params[ParamEnum.ier.name].options)
 
         for m in self.cfg["modes"].keys():
             #TODO
@@ -318,7 +336,7 @@ Path('logs').mkdir(exist_ok=True)
 with open("style.qss", 'r') as style_file:
     app.setStyleSheet(style_file.read())
 with open(CONFIG_FILE, 'r') as config_file:
-    config = yaml.safe_load(config_file)
+    config = yaml.load(config_file)
 logging.config.dictConfig(config['logging'])
 window = MainWindow(config)
 window.show()

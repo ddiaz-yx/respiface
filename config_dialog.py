@@ -14,10 +14,12 @@ from PyQt5.QtWidgets import QDialog, QFrame, QLabel
 from PyQt5 import QtCore, Qt
 
 from functools import partial
-from parameter import Parameter, OpModEnum
+from parameter import Parameter, OpModEnum, ParamEnum
 import copy
 import styles as st
-
+import numpy as np
+SLIDER_MULTIPLIER = 10
+EPS = 1e-6
 
 class ConfigDialog(QDialog, Ui_Dialog):
 
@@ -34,9 +36,10 @@ class ConfigDialog(QDialog, Ui_Dialog):
         self.selected_param: Parameter = None
         self.selected_param_frame = QFrame()
         self.horizontalSlider.valueChanged.connect(self.slider_value_changed)
-        self.btn_left_arrow.pressed.connect(self.btn_left_arrow_pressed)
-        self.btn_right_arrow.pressed.connect(self.btn_right_arrow_pressed)
+        self.frm_left_arrow.mousePressEvent = partial(self.frm_left_arrow_pressed)
+        self.frm_right_arrow.mousePressEvent = partial(self.frm_right_arrow_pressed)
         self.adjusting(False)
+        self.current_value = None
         self.frm_aceptar.mousePressEvent = partial(self.frm_aceptar_pressed)
         self.frm_cancelar.mousePressEvent = partial(self.frm_cancelar_pressed)
         self.frm_volver.mousePressEvent = partial(self.frm_volver_pressed)
@@ -46,11 +49,21 @@ class ConfigDialog(QDialog, Ui_Dialog):
 
 
         # Pone los valores actuales en los labels
+        if self.params['mode'].value == OpModEnum.vcv.value:
+            self.frm_param_op_mode_vcv.setStyleSheet(st.qss_frm_selected)
+            self.frm_param_op_mode_pcv.setStyleSheet(st.qss_frm_top)
+        elif self.params['mode'].value == OpModEnum.pcv.value:
+            self.frm_param_op_mode_pcv.setStyleSheet(st.qss_frm_selected)
+            self.frm_param_op_mode_vcv.setStyleSheet(st.qss_frm_top)
+
         for name, param in self.params.items():
             frame_name = "frm_param_" + name
             f = self.findChild(QFrame, name=frame_name)
             if f:
-                self.get_value_label(f).setText(f"{param.value:{param.value_format}}")
+                if param.value_as_index == True:
+                    self.get_value_label(f).setText(f"{param.options[param.value]:{param.value_format}}")
+                else:
+                    self.get_value_label(f).setText(f"{param.value:{param.value_format}}")
 
     def set_styles(self):
         self.line.hide()
@@ -66,6 +79,8 @@ class ConfigDialog(QDialog, Ui_Dialog):
         self.frm_aceptar.setStyleSheet(st.qss_frm_but_enabled)
         self.frm_cancelar.setStyleSheet(st.qss_frm_but_enabled)
         self.frm_volver.setStyleSheet(st.qss_frm_but_enabled)
+        self.frm_left_arrow.setStyleSheet(st.qss_frm_top)
+        self.frm_right_arrow.setStyleSheet(st.qss_frm_top)
         self.frm_param_op_mode_simv.hide()
         frames = self.findChildren(QFrame)
         for f in frames:
@@ -105,8 +120,8 @@ class ConfigDialog(QDialog, Ui_Dialog):
 
     def adjusting(self, enabled):
         if enabled:
-            self.btn_left_arrow.show()
-            self.btn_right_arrow.show()
+            self.frm_left_arrow.show()
+            self.frm_right_arrow.show()
             self.horizontalSlider.show()
             self.frm_volver.setDisabled(True)
             self.frm_volver.setStyleSheet(st.qss_frm_but_disbled)
@@ -116,8 +131,8 @@ class ConfigDialog(QDialog, Ui_Dialog):
             self.frm_cancelar.setStyleSheet(st.qss_frm_but_enabled)
             self.frm_op_mode.setDisabled(True)
         else:
-            self.btn_left_arrow.hide()
-            self.btn_right_arrow.hide()
+            self.frm_left_arrow.hide()
+            self.frm_right_arrow.hide()
             self.horizontalSlider.hide()
             self.frm_volver.setEnabled(True)
             self.frm_volver.setStyleSheet(st.qss_frm_but_enabled)
@@ -127,47 +142,77 @@ class ConfigDialog(QDialog, Ui_Dialog):
             self.frm_cancelar.setStyleSheet(st.qss_frm_but_disbled)
             self.frm_op_mode.setEnabled(True)
 
-        self.btn_left_arrow.setEnabled(enabled)
-        self.btn_right_arrow.setEnabled(enabled)
+        self.frm_left_arrow.setEnabled(enabled)
+        self.frm_right_arrow.setEnabled(enabled)
         self.horizontalSlider.setEnabled(enabled)
 
-    def btn_left_arrow_pressed(self):
-        fmt = self.selected_param.value_format
+    def slider_value_changed(self, val):
         step = self.selected_param.value_step
-        value = float(self.get_value_label(self.selected_param_frame).text())
-        value -= step
-        self.get_value_label(self.selected_param_frame).setText(f"{value:{fmt}}")
-        self.update_slider(value)
+        self.current_value = self.slider_to_param_value(self.selected_param)
+        self.update_selected_label()
+        if self.current_value + step > self.selected_param.value_max + EPS:
+            self.frm_right_arrow.setEnabled(False)
+        if self.current_value - step > self.selected_param.value_min - EPS:
+            self.frm_left_arrow.setEnabled(True)
+        if self.current_value - step < self.selected_param.value_min - EPS:
+            self.frm_left_arrow.setEnabled(False)
+        if self.current_value + step < self.selected_param.value_max + EPS:
+            self.frm_right_arrow.setEnabled(True)
         self.uncommited_change = True
-        if value - step < self.selected_param.value_min:
-            self.btn_left_arrow.setEnabled(False)
-        if value + step < self.selected_param.value_max:
-            self.btn_right_arrow.setEnabled(True)
+        print(self.current_value)
 
-    def btn_right_arrow_pressed(self):
-        fmt = self.selected_param.value_format
+    def frm_left_arrow_pressed(self, event: QMouseEvent):
         step = self.selected_param.value_step
-        value = float(self.get_value_label(self.selected_param_frame).text())
-        value += step
-        self.get_value_label(self.selected_param_frame).setText(f"{value:{fmt}}")
-        self.update_slider(value)
+        str_value = self.get_value_label(self.selected_param_frame).text()
+        self.current_value -= step
+        self.update_selected_label()
+        self.update_slider()
         self.uncommited_change = True
-        if value + step > self.selected_param.value_max:
-            self.btn_right_arrow.setEnabled(False)
-        if value - step > self.selected_param.value_min:
-            self.btn_left_arrow.setEnabled(True)
+        print(self.current_value)
+        if self.current_value - step < self.selected_param.value_min - EPS:
+            self.frm_left_arrow.setEnabled(False)
+        if self.current_value + step < self.selected_param.value_max + EPS:
+            self.frm_right_arrow.setEnabled(True)
 
-    def update_slider(self, val):
+    def frm_right_arrow_pressed(self, event: QMouseEvent):
+        step = self.selected_param.value_step
+        str_value = self.get_value_label(self.selected_param_frame).text()
+        self.current_value += step
+        self.update_selected_label()
+        self.update_slider()
+        self.uncommited_change = True
+
+        if self.current_value + step > self.selected_param.value_max + EPS:
+            self.frm_right_arrow.setEnabled(False)
+        if self.current_value - step > self.selected_param.value_min - EPS:
+            self.frm_left_arrow.setEnabled(True)
+
+    def update_selected_label(self):
+        """
+        Sets the label text to the current param value
+        :return:
+        """
+        fmt = self.selected_param.value_format
+        label = self.get_value_label(self.selected_param_frame)
+        if self.selected_param.value_as_index:
+            label.setText(f"{self.selected_param.options[int(self.current_value)]:{fmt}}")
+        else:
+            label.setText(f"{self.current_value:{fmt}}")
+
+    def update_slider(self):
         # Desconecta antes de cambiar el valor, de lo contrario esto gatillaría a su vez un cambio de este label
         try:
             self.horizontalSlider.disconnect()
         except TypeError:
             pass
-        self.horizontalSlider.setValue(self.param_to_slider_value(self.selected_param, val))
+        self.horizontalSlider.setValue(self.param_to_slider_value(self.selected_param, self.current_value))
         self.horizontalSlider.valueChanged.connect(self.slider_value_changed)
 
     def confirm_param(self):
-        self.selected_param.value = float(self.get_value_label(self.selected_param_frame).text())
+        if self.selected_param.value_as_index:
+            self.selected_param.value = int(self.current_value)
+        else:
+            self.selected_param.value = self.current_value
         self.selected_param_frame.setStyleSheet(st.qss_frm_top)
         self.selected_param = None
         self.selected_param_frame = None
@@ -187,8 +232,11 @@ class ConfigDialog(QDialog, Ui_Dialog):
                 self.adjusting(True)
                 self.selected_param_frame = frame
                 self.selected_param = self.params[frame.objectName().replace("frm_param_", "")]
-                val = float(self.get_value_label(frame).text())
-                self.update_slider(val)
+                self.horizontalSlider.setMaximum(self.selected_param.value_max*SLIDER_MULTIPLIER)
+                self.horizontalSlider.setMinimum(self.selected_param.value_min*SLIDER_MULTIPLIER)
+                self.horizontalSlider.setSingleStep(1)
+                self.current_value = self.selected_param.value
+                self.update_slider()
                 print(f"Selected param: {self.selected_param.screen_name}")
         elif frame.parent().objectName() == "frm_op_mode" and not self.uncommited_change:
             self.unselect_child_frames(frame.parent())
@@ -204,23 +252,12 @@ class ConfigDialog(QDialog, Ui_Dialog):
             if "value" in label.objectName():
                 return label
 
-    def slider_value_changed(self, val):
-        fmt = self.selected_param.value_format
-        value = self.slider_to_param_value(self.selected_param)
-        self.get_value_label(self.selected_param_frame).setText(f"{value:{fmt}}")
-        self.uncommited_change = True
-        if value + self.selected_param.value_step > self.selected_param.value_max:
-            self.btn_right_arrow.setEnabled(False)
-        if value - self.selected_param.value_step > self.selected_param.value_min:
-            self.btn_left_arrow.setEnabled(True)
-        if value - self.selected_param.value_step < self.selected_param.value_min:
-            self.btn_left_arrow.setEnabled(False)
-        if value + self.selected_param.value_step < self.selected_param.value_max:
-            self.btn_right_arrow.setEnabled(True)
-
     def slider_to_param_value(self, param):
-        return self.horizontalSlider.value() / self.horizontalSlider.maximum() \
-               * (param.value_max - param.value_min) + param.value_min
+        val = self.horizontalSlider.value()/SLIDER_MULTIPLIER
+        if param.value_as_index:
+            return int(val)
+        else:
+            return val - (val%param.value_step)# float(f"{val:{param.value_format}}")
 
     def param_to_slider_value(self, param, value):
-        return (value - param.value_min) / (param.value_max - param.value_min) * self.horizontalSlider.maximum()
+        return value*SLIDER_MULTIPLIER

@@ -19,11 +19,13 @@ resp_params:
   ier:
     screen_name: "Ratio I:E"
     units: ""
-    min:      1, 1  # I, E
-    max:      3, 5  # I, E
-    default:  1, 3  # I, E
-    step:     0.5, 0.5  # I, E
-    format:   g, g  # I, E
+    # If options is present, use values as index
+    options: !!python/tuple ['3.0:1', '2.8:1', '2.6:1', '2.4:1', '2.2:1', '2:1', '1.8:1', '1.6:1', '1.4:1', '1.2:1', '1:1', '1:1.2', '1:1.4', '1:1.6', '1:1.8', '1:2.0', '1:2.2', '1:2.4', '1:2.6', '1:2.8', '1:3.0', '1:3.2', '1:3.4', '1:3.6', '1:3.8', '1:4.0', '1:4.2', '1:4.4', '1:4.6', '1:4.8', '1:5.0']
+    min: 0
+    max: 30
+    default: 10
+    step: 1
+    format: s
   fio2:
     screen_name: FiO2
     units: "%"
