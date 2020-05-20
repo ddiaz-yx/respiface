@@ -49,7 +49,7 @@ class DataProxy(QThread):
     signal_new_param_values = pyqtSignal(
         dict)  # Se emite cuando se desde el socket llega un nuevo valor para un parámetro
 
-    def __init__(self, cur_pressure: deque, cur_flow: deque, total_flow: deque, user_set_param: deque):
+    def __init__(self, cur_pressure: deque, cur_flow: deque, total_flow: deque, p_mmax: deque, p_mmavg: deque, user_set_param: deque):
         QThread.__init__(self)
         self.logger = logging.getLogger('gui')
         try:
@@ -60,6 +60,8 @@ class DataProxy(QThread):
         self.dq_cp = cur_pressure
         self.dq_cf = cur_flow
         self.dq_tf = total_flow
+        self.dq_p_mmax = p_mmax
+        self.dq_p_mavg = p_mmavg
         self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.socket.bind(SOCKET_ADDRESS)
         #self.socket = socket.socket()
@@ -189,11 +191,19 @@ class DataProxy(QThread):
                 cp_vals = self.parse_data(num_samples, data['cp'], timestamp)
                 cf_vals = self.parse_data(num_samples, data['cf'], timestamp)
                 tf_vals = self.parse_data(num_samples, data['tf'], timestamp)
+                p_mmax = self.parse_data(num_samples, data['cp_mmax'], timestamp)
+                p_mavg = self.parse_data(num_samples, data['cp_mavg'], timestamp)
                 if cp_vals:
                     self.dq_cp.append(cp_vals)
                 if cf_vals:
                     self.dq_cf.append(cf_vals)
                 if tf_vals:
                     self.dq_tf.append(tf_vals)
+                if p_mmax:
+                    for val in p_mmax:
+                        self.dq_p_mmax.append(val)
+                if p_mavg:
+                    for val in p_mavg:
+                        self.dq_p_mavg.append(val)
         except ValueError as e:
             self.logger.exception("")

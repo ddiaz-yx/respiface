@@ -23,6 +23,7 @@ import styles as st
 
 CONFIG_FILE = "config.yaml"
 MAX_DATA_POINTS = 3000  # 60 segundos a 50 Hz
+MAX_STATS_POINTS = 10
 UNDER_CURVE_ALPHA = "55"
 
 
@@ -41,6 +42,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dq_cp = deque([], MAX_DATA_POINTS)
         self.dq_cf = deque([], MAX_DATA_POINTS)
         self.dq_tf = deque([], MAX_DATA_POINTS)
+        self.dq_p_mmax = deque([], MAX_STATS_POINTS)
+        self.dq_p_mavg = deque([], MAX_STATS_POINTS)
         self.dq_user_set_param = deque()  # cola de parametros seteados por usuario, por enviar al controlador
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
         self.plot_update_timer = QtCore.QTimer()
@@ -65,7 +68,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.plot_update_timer.start(50)
         # self.mem_check_timer.timeout.connect(lambda : self.logger.info(f"Mem usage: {psutil.Process(os.getpid()).memory_info().rss}"))
         # self.mem_check_timer.start(1000)
-        self.proxy = DataProxy(self.dq_cp, self.dq_cf, self.dq_tf, self.dq_user_set_param)
+        self.proxy = DataProxy(self.dq_cp, self.dq_cf, self.dq_tf, self.dq_p_mmax, self.dq_p_mavg, self.dq_user_set_param)
         self.proxy.start()
 
         self.dialog_set_param = ParamSetDialog(self.centralwidget)
@@ -283,10 +286,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def draw_plots(self):
         t1 = Thread(target=self.draw_top)
         t2 = Thread(target=self.draw_bottom)
+        t3 = Thread(target=self.draw_stats())
         t1.start()
         t2.start()
+        t3.start()
         t1.join()
         t2.join()
+        t3.join()
 
     def draw_top(self):
         if not len(self.dq_cf):
@@ -303,6 +309,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.f_curve_trail.setData(x_trail, y_trail, _callSync='off')
         self.f_curve_lead.setData(x_lead, y_lead, _callSync='off')
         # self.f_curve_lead.setData(np.append(x_lead, x_trail), np.append(y_lead, y_trail), _callSync='off')
+
+    def draw_stats(self):
+        if len(self.dq_p_mmax):
+            p_mmax_label = self.findChild(QLabel, name="lbl_cpmax")
+            p_mmax_label.setText(f"{self.dq_p_mmax.pop():.2f}")
+        if len(self.dq_p_mavg):
+            p_mavg_label = self.findChild(QLabel, name="lbl_cpavg")
+            p_mavg_label.setText(f"{self.dq_p_mavg.pop():.2f}")
+
 
     def time_arrange_data(self, data, edge_value):
         time_span = self.gscale_options[self.gscale_idx]
