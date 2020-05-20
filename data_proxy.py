@@ -17,7 +17,7 @@ from parameter import Parameter, ParamEnum
 from threading import Thread
 import logging
 
-SOCKET_ADDRESS = "/home/mich/my_socket"
+SOCKET_ADDRESS = "/tmp/touchscreen.sock"
 MAX_DATA_POINTS = 6000  # 60 segundos a 100 Hz
 SAMPLE_PERIOD = 0.01  # seconds
 SAMPLE_LENGTH_BYTES = 8
