@@ -91,6 +91,19 @@ class DataProxy(QThread):
             t = t + SAMPLE_PERIOD
         return data
 
+    def parse_stats(self, n_samples, hex_string):
+        data = []
+        try:
+            dec = bytearray.fromhex(hex_string[:n_samples*SAMPLE_LENGTH_BYTES*2])
+        except ValueError as e:
+            self.logger.exception(f"Error parsing hex-string {hex_string}")
+            return False
+        iter_ = struct.iter_unpack('>d', dec)
+        for i in range(0, n_samples):
+            val, = next(iter_)
+            data.append(val)
+        return data
+
     def send_new_param_value(self):
         """
         Periodically checks the deque for new params set by the user
@@ -191,8 +204,8 @@ class DataProxy(QThread):
                 cp_vals = self.parse_data(num_samples, data['cp'], timestamp)
                 cf_vals = self.parse_data(num_samples, data['cf'], timestamp)
                 tf_vals = self.parse_data(num_samples, data['tf'], timestamp)
-                p_mmax = self.parse_data(num_samples, data['cp_mmax'], timestamp)
-                p_mavg = self.parse_data(num_samples, data['cp_mavg'], timestamp)
+                p_mmax = self.parse_stats(num_samples, data['cp_mmax'])
+                p_mavg = self.parse_stats(num_samples, data['cp_mavg'])
                 if cp_vals:
                     self.dq_cp.append(cp_vals)
                 if cf_vals:
@@ -200,6 +213,7 @@ class DataProxy(QThread):
                 if tf_vals:
                     self.dq_tf.append(tf_vals)
                 if p_mmax:
+                    print(p_mmax)
                     for val in p_mmax:
                         self.dq_p_mmax.append(val)
                 if p_mavg:
