@@ -23,6 +23,9 @@ class OpModEnum(Enum):
     vcv = 1
 
 
+PLOT_TIME_SCALES = [5, 20, 60]
+
+
 class Parameter:
     def __init__(self, name: str = "", screen_name="", units="", min_=None, max_=None, default=None, step=None, adjustable: bool = True, fmt=".1f"):
         self.name = name

@@ -13,7 +13,7 @@ from config_dialog import ConfigDialog
 from param_dialog import ParamSetDialog
 from ui_main_window import Ui_MainWindow
 import yaml
-from parameter import Parameter, ParamEnum, OpMode, OpModEnum
+from parameter import Parameter, ParamEnum, OpMode, OpModEnum, PLOT_TIME_SCALES
 from collections import deque
 from data_proxy import DataProxy
 import time
@@ -94,7 +94,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         for name, prm in params_.items():
             if 'ier' not in name:
                 try:
-                    self.params[name].value = prm.value
+                    if name == ParamEnum.gscale.name:
+                        try:
+                            val = PLOT_TIME_SCALES.index(prm.value)
+                        except ValueError as e:
+                            print("unknown time scale: {}".format(prm.value))
+                            val = 0
+                    else:
+                        val = prm.value
+                    self.params[name].value = val
                 except KeyError as e:
                     print("Received config for unknown parameter: " + str(e))
 
@@ -192,10 +200,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.lbl_op_mode.setText("PCV")
 
         for name, p in self.params.items():
+            if name == ParamEnum.gscale.name:
+                self.gscale_idx = p.value
+                self.adjust_gscale()
+                continue
             label = self.findChild(QLabel, name="lbl_" + name)
             if label:
                 if p.value_as_index:
-                    label.setText(f"{p.options[p.value]:{p.value_format}}")
+                    label.setText(f"{p.options[0]:{p.value_format}}")
                 else:
                     label.setText(f"{p.value:{p.value_format}}")
 
@@ -203,6 +215,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.gscale_idx += 1
         self.gscale_idx %= len(self.gscale_options)
         self.adjust_gscale()
+        self.params[ParamEnum.gscale.name].value = self.gscale_idx
+        self.dq_user_set_param.append(self.params[ParamEnum.gscale.name])
 
     def adjust_gscale(self):
         span = self.gscale_options[self.gscale_idx]
@@ -258,6 +272,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.params['mode'] = Parameter(name='mode')
         self.params['mode'].value = OpModEnum.vcv.value     #VCV by default upon starting
+
+        self.params[ParamEnum.gscale.name] = Parameter(name=ParamEnum.gscale.name)
 
     def adjust_param(self, param_: ParamEnum, event: QMouseEvent):
         '''

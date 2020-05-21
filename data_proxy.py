@@ -13,7 +13,7 @@ import os
 from urllib.parse import urlparse
 from urllib import parse
 import struct
-from parameter import Parameter, ParamEnum
+from parameter import Parameter, ParamEnum, PLOT_TIME_SCALES
 from threading import Thread
 import logging
 
@@ -32,7 +32,8 @@ PARAM_TYPES = {
     'mode': int,
     'tvm': int,
     'peep': int,
-    'tf':float
+    'tf': float,
+    'gscale': int
 }
 PARAM_NAMES = (k for k in PARAM_TYPES)
 
@@ -121,7 +122,10 @@ class DataProxy(QThread):
                         val_e = PARAM_TYPES[param.name](param.options[param.value].split(':')[1])
                         msg += bytes(f"ier_i={val_i}&ier_e={val_e}".encode('ascii'))
                     else:
-                        val = PARAM_TYPES[param.name](param.value)
+                        if param.name == ParamEnum.gscale.name:
+                            val = PLOT_TIME_SCALES[PARAM_TYPES[param.name](param.value)]
+                        else:
+                            val = PARAM_TYPES[param.name](param.value)
                         msg += bytes(f"{param.name}={val}".encode('ascii'))
                     msg += bytes('&'.encode('ascii'))
 
@@ -213,7 +217,6 @@ class DataProxy(QThread):
                 if tf_vals:
                     self.dq_tf.append(tf_vals)
                 if p_mmax:
-                    print(p_mmax)
                     for val in p_mmax:
                         self.dq_p_mmax.append(val)
                 if p_mavg:
