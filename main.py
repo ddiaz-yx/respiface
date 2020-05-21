@@ -49,6 +49,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.plot_update_timer = QtCore.QTimer()
         self.mem_check_timer = QtCore.QTimer()
 
+        self.setCursor(Qt.BlankCursor)
+
         self.gscale_options = (5, 20, 60)
         self.gscale_idx = 0  # Indice de gscale options
         self.gtime_ini = time.time()  # Marca el inicio de la ventana de gráficos
