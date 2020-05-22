@@ -577,7 +577,7 @@ class Ui_MainWindow(object):
         self.lbl_ier.setText(_translate("MainWindow", "0:0"))
         self.label_9.setText(_translate("MainWindow", "Resp/min"))
         self.lbl_brpm.setText(_translate("MainWindow", "0"))
-        self.label_13.setText(_translate("MainWindow", "Flujo Total"))
+        self.label_13.setText(_translate("MainWindow", "Flujo max"))
         self.lbl_tf.setText(_translate("MainWindow", "0"))
         self.label_14.setText(_translate("MainWindow", "<html><head/><body><p align=\"center\">L/min [25.0]</p></body></html>"))
         self.label_15.setText(_translate("MainWindow", "<html><head/><body><p>FiO<span style=\" vertical-align:sub;\">2</span></p></body></html>"))

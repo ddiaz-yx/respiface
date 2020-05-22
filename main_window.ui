@@ -523,7 +523,7 @@
             </font>
            </property>
            <property name="text">
-            <string>Flujo Total</string>
+            <string>Flujo max</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>

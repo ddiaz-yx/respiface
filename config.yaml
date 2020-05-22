@@ -43,7 +43,7 @@ resp_params:
     step: 1
     format: .0f
   tf:
-    screen_name: Flujo total
+    screen_name: Flujo max
     units: L/min
     min: 1
     max: 10
