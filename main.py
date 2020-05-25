@@ -22,7 +22,8 @@ import logging, logging.config
 import styles as st
 
 CONFIG_FILE = "config.yaml"
-MAX_DATA_POINTS = 3000  # 60 segundos a 50 Hz
+DATA_REFRESH_FREQ = 50  # 50 Hz
+MAX_DATA_POINTS = 60 * DATA_REFRESH_FREQ  # 60 segundos a 50 Hz
 MAX_STATS_POINTS = 10
 UNDER_CURVE_ALPHA = "55"
 
@@ -67,7 +68,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.frm_gscale.mousePressEvent = partial(self.new_scale)
 
         self.plot_update_timer.timeout.connect(self.draw_plots)
-        self.plot_update_timer.start(50)
+        self.plot_update_timer.start(DATA_REFRESH_FREQ)
         # self.mem_check_timer.timeout.connect(lambda : self.logger.info(f"Mem usage: {psutil.Process(os.getpid()).memory_info().rss}"))
         # self.mem_check_timer.start(1000)
         self.proxy = DataProxy(self.dq_cp, self.dq_cf, self.dq_tf, self.dq_p_mmax, self.dq_p_mavg, self.dq_user_set_param)
@@ -226,8 +227,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.gtime_ini = time.time()
         pad = 0.025
         y_max = 20
-        self.plt_pressure.setRange(xRange=[0, span + 0.5], yRange=[-pad * y_max, y_max * (1 + pad)], update=True,
-                                   padding=0)
+        self.plt_pressure.setRange(xRange=[0, span + 0.5], yRange=[-pad * y_max, y_max * (1 + pad)], update=True, padding=0)
         y_max = 5
         self.plt_flow.setRange(xRange=[0, span + 0.5], yRange=[-pad * y_max, y_max * (1 + pad)], update=True, padding=0)
 
@@ -304,7 +304,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def draw_plots(self):
         t1 = Thread(target=self.draw_top)
         t2 = Thread(target=self.draw_bottom)
-        t3 = Thread(target=self.draw_stats())
+        t3 = Thread(target=self.draw_stats)
         t1.start()
         t2.start()
         t3.start()
@@ -339,21 +339,27 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def time_arrange_data(self, data, edge_value):
         time_span = self.gscale_options[self.gscale_idx]
+        time_span_points = time_span * DATA_REFRESH_FREQ
         x_lead = data[:, 0] - self.gtime_ini
         y_lead = data[:, 1]
         if x_lead[-1] >= time_span:
             self.gtime_ini = time.time()
         try:
-            trail_idx = np.argmax(x_lead > x_lead[-1] - time_span)
-            x_trail = x_lead[trail_idx:]
-            x_trail = x_trail - x_trail[0] + x_lead[-1]  # + time_span / 100
-            y_trail = y_lead[trail_idx:]
+            if len(x_lead) < time_span_points:
+                x_trail, y_trail = [], []
+            else:
+                trail_idx = len(x_lead) - time_span_points
+                x_trail = x_lead[trail_idx:]
+                x_trail = x_trail - x_trail[0] + x_lead[-1]  # + time_span / 100
+                y_trail = y_lead[trail_idx:]
+
+                # flancos
+                x_trail[0] = x_trail[1] - 0.005
+                y_trail[0] = edge_value
 
             # flancos
             x_lead[-1] = x_lead[-2] + 0.005
             y_lead[-1] = edge_value
-            x_trail[0] = x_trail[1] - 0.005
-            y_trail[0] = edge_value
 
         except IndexError as e:
             x_lead, y_lead, x_trail, y_trail = [], [], [], []
