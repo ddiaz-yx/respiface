@@ -340,6 +340,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def time_arrange_data(self, data, edge_value):
         time_span = self.gscale_options[self.gscale_idx]
         time_span_points = time_span * DATA_REFRESH_FREQ
+
+        if self.gtime_ini < data[:, 0][0]:
+            self.gtime_ini = time.time()
+
         x_lead = data[:, 0] - self.gtime_ini
         y_lead = data[:, 1]
         if x_lead[-1] >= time_span:
