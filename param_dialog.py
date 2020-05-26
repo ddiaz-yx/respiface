@@ -56,6 +56,7 @@ class ParamSetDialog(QDialog, Ui_Dialog):
         self.horizontalSlider.valueChanged.connect(self.slider_value_changed)
 
         self.param: Parameter = None
+        self.param2: Parameter = None
 
         self.format = ""
         self.value = 0
@@ -69,7 +70,7 @@ class ParamSetDialog(QDialog, Ui_Dialog):
         self.value_i_min = 0  # para el caso de I:E
         self.step_i = 1
 
-    def set_parameter(self, p: Parameter):
+    def set_parameter(self, p: Parameter, p2: Parameter = None):
         self.param = p
         if p.units:
             self.lbl_param_name.setText(self.param.screen_name + " [" + p.units + "]")
@@ -77,20 +78,21 @@ class ParamSetDialog(QDialog, Ui_Dialog):
             self.lbl_param_name.setText(self.param.screen_name)
         print(self.param.name)
 
-        if self.param.name == ParamEnum.ier.name:
-            self.format = self.param.value_format[1]
-            self.value_max = self.param.value_max[1]
-            self.value_min = self.param.value_min[1]
-            self.step = self.param.value_step[1]
-            self.value = self.param.value[1]
+        if self.param.name == ParamEnum.ier_e.name:
+            self.param2 = p2
+            self.format = self.param.value_format
+            self.value_max = self.param.value_max
+            self.value_min = self.param.value_min
+            self.step = self.param.value_step
+            self.value = self.param.value
 
-            self.format_i = self.param.value_format[0]
-            self.value_i_max = self.param.value_max[0]
-            self.value_i_min = self.param.value_min[0]
-            self.step_i = self.param.value_step[0]
-            self.value_i = self.param.value[0]
+            self.format_i = self.param2.value_format
+            self.value_i_max = self.param2.value_max
+            self.value_i_min = self.param2.value_min
+            self.step_i = self.param2.value_step
+            self.value_i = self.param2.value
 
-            self.lbl_param_value.setText(f"{self.value_i:{self.format_i}} : {self.value:{self.format}}")
+            # self.lbl_param_value.setText(f"{self.value_i:{self.format_i}} : {self.value:{self.format}}")
             self.horizontalSlider.hide()
             self.btn_down_left.show()
             self.btn_up_left.show()
@@ -104,12 +106,12 @@ class ParamSetDialog(QDialog, Ui_Dialog):
             self.value_min = self.param.value_min
             self.step = self.param.value_step
 
-            self.lbl_param_value.setText(f"{self.param.value:{self.param.value_format}}")
+            # self.lbl_param_value.setText(f"{self.param.value:{self.param.value_format}}")
             self.btn_down_left.hide()
             self.btn_up_left.hide()
             self.horizontalSlider.setMaximum(self.param.value_max)
             self.horizontalSlider.setMinimum(self.param.value_min)
-            self.horizontalSlider.setValue(self.param.value)
+            # self.horizontalSlider.setValue(self.param.value)
             self.horizontalSlider.setSingleStep(self.param.value_step)
             self.horizontalSlider.show()
             self.lbl_max.setText(f"{self.param.value_max:{self.param.value_format}}")
@@ -117,6 +119,8 @@ class ParamSetDialog(QDialog, Ui_Dialog):
             self.lbl_max.show()
             self.lbl_min.show()
             self.lbl_param_value.setFont(QFont('Arial', DEFAULT_VALUE_FONT_SIZE))
+
+        self.update_ui()
         print(f"Param: {self.param.name}")
         print(f" format: {self.format}")
         print(f" value: {self.value}")
@@ -124,63 +128,52 @@ class ParamSetDialog(QDialog, Ui_Dialog):
         print(f" value_max: {self.value_max}")
         print(f" step: {self.step}")
 
-    def slider_value_changed(self, val):
-        val = val - val%self.step
-        self.lbl_param_value.setText(f"{val:{self.format}}")
-
-    def btn_up_pressed(self):
-        txt = self.lbl_param_value.text()
-        val = float(txt.split(":")[-1])    # en caso de I:E
-        val = val + self.step
-        if self.param.name == ParamEnum.ier.name:
-            self.lbl_param_value.setText(f"{txt.split(':')[0]}:{val:{self.format}}")
+    def update_ui(self):
+        if self.param.name == ParamEnum.ier_e.name:
+            self.lbl_param_value.setText(f"{self.value_i:{self.format_i}}:{self.value:{self.format}}")
+            if self.value_i > self.value_i_max - self.step:
+                self.btn_up_left.setDisabled(True)
+            else:
+                self.btn_up_left.setDisabled(False)
+            if self.value_i < self.value_i_min + self.step:
+                self.btn_down_left.setDisabled(True)
+            else:
+                self.btn_down_left.setDisabled(False)
         else:
-            self.lbl_param_value.setText(f"{val:{self.param.value_format}}")
-            self.horizontalSlider.setValue(val)
-        if val > self.value_max - self.step:
+            self.lbl_param_value.setText(f"{self.value:{self.format}}")
+            self.horizontalSlider.setValue(self.value)
+
+        if self.value > self.value_max - self.step:
             self.btn_up.setDisabled(True)
-        if val > self.value_min + self.step:
+        else:
+            self.btn_up.setDisabled(False)
+        if self.value < self.value_min + self.step:
+            self.btn_down.setDisabled(True)
+        else:
             self.btn_down.setDisabled(False)
 
+    def slider_value_changed(self, val):
+        self.value -= self.value%self.step
+        self.update_ui()
+
+    def btn_up_pressed(self):
+        self.value += self.step
+        self.update_ui()
+
     def btn_down_pressed(self):
-        txt = self.lbl_param_value.text()
-        val = float(txt.split(":")[-1])    # en caso de I:E
-        val = val - self.step
-        if self.param.name == ParamEnum.ier.name:
-            self.lbl_param_value.setText(f"{txt.split(':')[0]}:{val:{self.format}}")
-        else:
-            self.lbl_param_value.setText(f"{val:{self.param.value_format}}")
-            self.horizontalSlider.setValue(val)
-        if val < self.value_min + self.step:
-            self.btn_down.setDisabled(True)
-        if val < self.value_max - self.step:
-            self.btn_up.setDisabled(False)
+        self.value -= self.step
+        self.update_ui()
 
     def btn_up_left_pressed(self):
-        txt = self.lbl_param_value.text()
-        val = float(txt.split(":")[0])    # en caso de I:E
-        val = val + self.step_i
-        self.lbl_param_value.setText(f"{val:{self.format_i}}:{txt.split(':')[-1]}")
-        if val > self.value_i_max - self.step_i:
-            self.btn_up_left.setDisabled(True)
-        if val > self.value_i_min + self.step_i:
-            self.btn_down_left.setDisabled(False)
+        self.value_i += self.step_i
+        self.update_ui()
 
     def btn_down_left_pressed(self):
-        txt = self.lbl_param_value.text()
-        val = float(txt.split(":")[0])    # en caso de I:E
-        val = val - self.param.value_step[0]
-        self.lbl_param_value.setText(f"{val:{self.format_i}}:{txt.split(':')[-1]}")
-        if val < self.value_i_min + self.step_i:
-            self.btn_down_left.setDisabled(True)
-        if val < self.value_i_max - self.step_i:
-            self.btn_up_left.setDisabled(False)
+        self.value_i -= self.step_i
+        self.update_ui()
 
     def btn_anular_pressed(self):
         self.reject()
 
     def btn_confirmar_pressed(self):
-        self.value = tuple(float(v) for v in self.lbl_param_value.text().split(':'))
-        if len(self.value) == 1:
-            self.value = self.value[0]
         self.accept()

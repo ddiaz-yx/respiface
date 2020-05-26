@@ -95,23 +95,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         Recibe los valore desde el controlador
         '''
         for name, prm in params_.items():
-            if 'ier' not in name:
-                try:
-                    if name == ParamEnum.gscale.name:
-                        try:
-                            val = PLOT_TIME_SCALES.index(prm.value)
-                        except ValueError as e:
-                            print("unknown time scale: {}".format(prm.value))
-                            val = 0
-                    else:
-                        val = prm.value
-                    self.params[name].value = val
-                except KeyError as e:
-                    print("Received config for unknown parameter: " + str(e))
-
-        # Caso especial de ier
-        if 'ier_i' in params_.keys() and 'ier_e' in params_.keys():
-            self.params['ier'].value = (params_['ier_i'].value, params_['ier_e'].value)
+            try:
+                if name == ParamEnum.gscale.name:
+                    try:
+                        val = PLOT_TIME_SCALES.index(prm.value)
+                    except ValueError as e:
+                        print("unknown time scale: {}".format(prm.value))
+                        val = 0
+                else:
+                    val = prm.value
+                self.params[name].value = val
+            except KeyError as e:
+                print("Received config for unknown parameter: " + str(e))
 
         self.update_param_labels()
 
@@ -125,11 +120,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.params[name].value_min = prm.value_min
                 self.params[name].value_max = prm.value_max
                 self.params[name].value_default = prm.value_default
-
-        # Caso especial de ier
-        self.params['ier'].value_min = (params_['ier_i'].value_min, params_['ier_e'].value_min)
-        self.params['ier'].value_max = (params_['ier_i'].value_max, params_['ier_e'].value_max)
-        self.params['ier'].value_default = (params_['ier_i'].value_default, params_['ier_e'].value_default)
 
         self.splash.hide()
         del self.splash
@@ -207,12 +197,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.gscale_idx = p.value
                 self.adjust_gscale()
                 continue
+            if name in (ParamEnum.ier_i.name, ParamEnum.ier_e.name):
+                continue
             label = self.findChild(QLabel, name="lbl_" + name)
             if label:
-                if p.value_as_index:
-                    label.setText(f"{p.options[0]:{p.value_format}}")
-                else:
-                    label.setText(f"{p.value:{p.value_format}}")
+                label.setText(f"{p.value:{p.value_format}}")
+
+        # ier
+        ier_i = self.params[ParamEnum.ier_i.name]
+        ier_e = self.params[ParamEnum.ier_e.name]
+        label = self.findChild(QLabel, name="lbl_ier")
+        if label:
+            label.setText(f"{ier_i.value:{ier_i.value_format}}:{ier_e.value:{ier_e.value_format}}")
 
     def new_scale(self, event: QMouseEvent):
         self.gscale_idx += 1
@@ -281,12 +277,23 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         '''
         Adjustment of single params ( by clicking its frame in the main screen)
         '''
-        self.dialog_set_param.set_parameter(self.params[param_.name])
+        if param_.name == ParamEnum.ier.name:
+            self.dialog_set_param.set_parameter(self.params[ParamEnum.ier_e.name], self.params[ParamEnum.ier_i.name])
+        else:
+            self.dialog_set_param.set_parameter(self.params[param_.name])
         result = self.dialog_set_param.exec_()
         if result:
-            self.logger.info(f"New value for: {param_.name}: {self.dialog_set_param.value}")
-            self.params[param_.name].value = self.dialog_set_param.value  # Setea el valor en variable local
-            self.dq_user_set_param.append(self.params[param_.name])  # Envia el nuevo valor al controlador
+            if param_.name == ParamEnum.ier.name:
+                self.logger.info(f"New value for: {ParamEnum.ier_i.name}: {self.dialog_set_param.value_i}")
+                self.logger.info(f"New value for: {ParamEnum.ier_e.name}: {self.dialog_set_param.value}")
+                self.params[ParamEnum.ier_i.name].value = self.dialog_set_param.value_i  # Setea el valor en variable local
+                self.params[ParamEnum.ier_e.name].value = self.dialog_set_param.value  # Setea el valor en variable local
+                self.dq_user_set_param.append(self.params[ParamEnum.ier_i.name])  # Envia el nuevo valor al controlador
+                self.dq_user_set_param.append(self.params[ParamEnum.ier_e.name])  # Envia el nuevo valor al controlador
+            else:
+                self.logger.info(f"New value for: {param_.name}: {self.dialog_set_param.value}")
+                self.params[param_.name].value = self.dialog_set_param.value  # Setea el valor en variable local
+                self.dq_user_set_param.append(self.params[param_.name])  # Envia el nuevo valor al controlador
             self.update_param_labels()
 
     def btnConfig_pressed(self, event: QMouseEvent):
