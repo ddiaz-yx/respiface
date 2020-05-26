@@ -66,6 +66,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.frm_rpm.mousePressEvent = partial(self.adjust_param, ParamEnum.brpm, )
         self.frm_tvm.mousePressEvent = partial(self.adjust_param, ParamEnum.tvm, )
         self.frm_gscale.mousePressEvent = partial(self.new_scale)
+        self.frm_pant_bloq.mousePressEvent = partial(self.toggle_block)
+
+        self.blockable_ui = [self.frm_peep, self.frm_fio2, self.frm_tf, self.frm_ratioie, self.frm_rpm, self.frm_tvm, self.frm_op_mode]
+        self.blocked = False
 
         self.plot_update_timer.timeout.connect(self.draw_plots)
         self.plot_update_timer.start(DATA_REFRESH_FREQ)
@@ -376,6 +380,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             x_lead, y_lead, x_trail, y_trail = [], [], [], []
 
         return x_lead, y_lead, x_trail, y_trail
+
+    def toggle_block(self, event: QMouseEvent):
+        style = st.qss_frm_top
+        self.blocked = not self.blocked
+        for ui in self.blockable_ui:
+            ui.setDisabled(self.blocked)
+        if self.blocked:
+            style += st.qss_frm_selected
+        self.frm_pant_bloq.setStyleSheet(style)
 
 
 pg.setConfigOption('antialias', True)
