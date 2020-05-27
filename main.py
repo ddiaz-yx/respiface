@@ -68,7 +68,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.frm_gscale.mousePressEvent = partial(self.new_scale)
         self.frm_pant_bloq.mousePressEvent = partial(self.toggle_block)
 
-        self.blockable_ui = [self.frm_peep, self.frm_fio2, self.frm_tf, self.frm_ratioie, self.frm_rpm, self.frm_tvm, self.frm_op_mode]
+        self.blockable_ui = [self.frm_peep, self.frm_fio2, self.frm_tf, self.frm_ratioie, self.frm_rpm, self.frm_tvm, self.frm_op_mode, self.frm_config]
         self.blocked = False
 
         self.plot_update_timer.timeout.connect(self.draw_plots)
@@ -143,7 +143,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.frm_config.setStyleSheet(st.qss_frm_top)
         self.frm_pant_bloq.setStyleSheet(st.qss_frm_top)
         self.frm_config.setContentsMargins(0, 0, 0, 0)
-        self.lbl_config.setPixmap(QPixmap('resources/gear2.png'))
+        # self.lbl_config.setPixmap(QPixmap('resources/gear2.png'))
 
     def set_up_plots(self):
         # PRESION -----------------------------------------------
