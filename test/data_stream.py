@@ -42,8 +42,8 @@ def send_data():
             t = time.time()
             cp = struct.pack('>d', float(line[1])).hex()
             cf = struct.pack('>d', float(line[2])).hex()
-            tf = struct.pack('>d', float(line[3])).hex()
-            msg = f"d?ts={t}&n=1&cp={cp}&cf={cf}&tf={tf}".encode('ascii')
+            tv = struct.pack('>d', float(line[3])).hex()
+            msg = f"d?ts={t}&n=1&cp={cp}&cf={cf}&tv={tv}".encode('ascii')
             sock.sendall(msg)
             time.sleep(t_delta)
 

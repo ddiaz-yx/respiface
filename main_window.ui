@@ -486,7 +486,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QFrame" name="frm_tf">
+       <widget class="QFrame" name="frm_mf">
         <property name="frameShape">
          <enum>QFrame::Panel</enum>
         </property>
@@ -534,7 +534,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="lbl_current_tf">
+          <widget class="QLabel" name="lbl_current_fl">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
              <horstretch>0</horstretch>
@@ -557,7 +557,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="lbl_tf">
+          <widget class="QLabel" name="lbl_mf">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
              <horstretch>0</horstretch>

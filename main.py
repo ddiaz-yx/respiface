@@ -42,7 +42,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.read_config()
         self.dq_cp = deque([], MAX_DATA_POINTS)
         self.dq_cf = deque([], MAX_DATA_POINTS)
-        self.dq_tf = deque([], MAX_DATA_POINTS)
+        self.dq_tv = deque([], MAX_DATA_POINTS)
         self.dq_p_mmax = deque([], MAX_STATS_POINTS)
         self.dq_p_mavg = deque([], MAX_STATS_POINTS)
         self.dq_user_set_param = deque()  # cola de parametros seteados por usuario, por enviar al controlador
@@ -61,21 +61,21 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.frm_peep.mousePressEvent = partial(self.adjust_param, ParamEnum.peep)
         self.frm_fio2.mousePressEvent = partial(self.adjust_param, ParamEnum.fio2, )
-        self.frm_tf.mousePressEvent = partial(self.adjust_param, ParamEnum.tf, )
+        self.frm_mf.mousePressEvent = partial(self.adjust_param, ParamEnum.mf, )
         self.frm_ratioie.mousePressEvent = partial(self.adjust_param, ParamEnum.ier, )
         self.frm_rpm.mousePressEvent = partial(self.adjust_param, ParamEnum.brpm, )
         self.frm_tvm.mousePressEvent = partial(self.adjust_param, ParamEnum.tvm, )
         self.frm_gscale.mousePressEvent = partial(self.new_scale)
         self.frm_pant_bloq.mousePressEvent = partial(self.toggle_block)
 
-        self.blockable_ui = [self.frm_peep, self.frm_fio2, self.frm_tf, self.frm_ratioie, self.frm_rpm, self.frm_tvm, self.frm_op_mode, self.frm_config]
+        self.blockable_ui = [self.frm_peep, self.frm_fio2, self.frm_mf, self.frm_ratioie, self.frm_rpm, self.frm_tvm, self.frm_op_mode, self.frm_config]
         self.blocked = False
 
         self.plot_update_timer.timeout.connect(self.draw_plots)
         self.plot_update_timer.start(DATA_REFRESH_FREQ)
         # self.mem_check_timer.timeout.connect(lambda : self.logger.info(f"Mem usage: {psutil.Process(os.getpid()).memory_info().rss}"))
         # self.mem_check_timer.start(1000)
-        self.proxy = DataProxy(self.dq_cp, self.dq_cf, self.dq_tf, self.dq_p_mmax, self.dq_p_mavg, self.dq_user_set_param)
+        self.proxy = DataProxy(self.dq_cp, self.dq_cf, self.dq_tv, self.dq_p_mmax, self.dq_p_mavg, self.dq_user_set_param)
         self.proxy.start()
 
         self.dialog_set_param = ParamSetDialog(self.centralwidget)
@@ -134,7 +134,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.frm_cpavg.setStyleSheet(st.qss_frm_top + st.qss_lbl_yellow)
         self.frm_peep.setStyleSheet(st.qss_frm_top + st.qss_lbl_yellow)
         self.frm_fio2.setStyleSheet(st.qss_frm_top + st.qss_lbl_green)
-        self.frm_tf.setStyleSheet(st.qss_frm_top + st.qss_lbl_green)
+        self.frm_mf.setStyleSheet(st.qss_frm_top + st.qss_lbl_green)
         self.frm_ratioie.setStyleSheet(st.qss_frm_top + st.qss_lbl_green)
         self.frm_rpm.setStyleSheet(st.qss_frm_top + st.qss_lbl_green)
         self.frm_tvm.setStyleSheet(st.qss_frm_top + st.qss_lbl_blue)
@@ -351,11 +351,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             p_mavg_label = self.findChild(QLabel, name="lbl_cpavg")
             p_mavg_label.setText(f"{self.dq_p_mavg.pop():.2f}")
         if len(self.dq_cf):
-            cf_label = self.findChild(QLabel, name="lbl_current_tf")
+            cf_label = self.findChild(QLabel, name="lbl_current_fl")
             cf_label.setText(f"{self.dq_cf[-1][1]:.2f}")
-        if len(self.dq_tf):
+        if len(self.dq_tv):
             tvm_label = self.findChild(QLabel, name="lbl_current_tvm")
-            tvm_label.setText(f"{self.dq_tf[-1][1]:.2f}")
+            tvm_label.setText(f"{self.dq_tv[-1][1]:.2f}")
 
     def time_arrange_data(self, data, edge_value):
         time_span = self.gscale_options[self.gscale_idx]

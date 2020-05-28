@@ -32,7 +32,7 @@ PARAM_TYPES = {
     'mode': int,
     'tvm': int,
     'peep': int,
-    'tf': float,
+    'mf': float,
     'gscale': int
 }
 PARAM_NAMES = (k for k in PARAM_TYPES)
@@ -60,7 +60,7 @@ class DataProxy(QThread):
                 raise
         self.dq_cp = cur_pressure
         self.dq_cf = cur_flow
-        self.dq_tf = total_flow
+        self.dq_tv = total_flow
         self.dq_p_mmax = p_mmax
         self.dq_p_mavg = p_mmavg
         self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -207,15 +207,15 @@ class DataProxy(QThread):
                 timestamp = float(data['ts'])
                 cp_vals = self.parse_data(num_samples, data['cp'], timestamp)
                 cf_vals = self.parse_data(num_samples, data['cf'], timestamp)
-                tf_vals = self.parse_data(num_samples, data['tf'], timestamp)
+                tv_vals = self.parse_data(num_samples, data['tv'], timestamp)
                 p_mmax = self.parse_stats(num_samples, data['cp_mmax'])
                 p_mavg = self.parse_stats(num_samples, data['cp_mavg'])
                 if cp_vals:
                     self.dq_cp.append(cp_vals)
                 if cf_vals:
                     self.dq_cf.append(cf_vals)
-                if tf_vals:
-                    self.dq_tf.append(tf_vals)
+                if tv_vals:
+                    self.dq_tv.append(tv_vals)
                 if p_mmax:
                     for val in p_mmax:
                         self.dq_p_mmax.append(val)
