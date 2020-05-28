@@ -45,6 +45,32 @@ class ConfigDialog(QDialog, Ui_Dialog):
         self.frm_param_op_mode_pcv.mousePressEvent = partial(self.frm_param_op_mode_pcv_pressed)
         self.frm_param_op_mode_vcv.mousePressEvent = partial(self.frm_param_op_mode_vcv_pressed)
 
+        self.set_labels()
+
+    def set_styles(self):
+        self.line.hide()
+        self.setStyleSheet("background-color: " + st.BLACK + "; color: lightgrey;")
+        self.frm_op_mode.setStyleSheet(st.qss_frm_group)
+        self.frm_buttons.setStyleSheet(st.qss_frm_group)
+        self.frm_values.setStyleSheet(st.qss_frm_group)
+        self.lbl_title_op_mode.setStyleSheet("background-color: rgba(0, 0, 0, 0)")
+        self.lbl_title_basic_params.setStyleSheet("background-color: rgba(0, 0, 0, 0)")
+        self.lbl_title_right.setStyleSheet("background-color: rgba(0, 0, 0, 0)")
+        self.frm_aceptar.setStyleSheet(st.qss_frm_but_enabled)
+        self.frm_cancelar.setStyleSheet(st.qss_frm_but_enabled)
+        self.frm_volver.setStyleSheet(st.qss_frm_but_enabled)
+        self.frm_left_arrow.setStyleSheet(st.qss_frm_top)
+        self.frm_right_arrow.setStyleSheet(st.qss_frm_top)
+        self.frm_left_arrow_2.setStyleSheet(st.qss_frm_top)
+        self.frm_right_arrow_2.setStyleSheet(st.qss_frm_top)
+        self.frm_param_op_mode_pcv.hide()
+        self.frm_param_op_mode_simv.hide()
+        frames = self.findChildren(QFrame)
+        for f in frames:
+            if f.objectName().startswith('frm_param_'):
+                f.setStyleSheet(st.qss_frm_top)
+
+    def set_labels(self):
         # Pone los valores actuales en los labels
         if self.params['mode'].value == OpModEnum.vcv.value:
             self.frm_param_op_mode_vcv.setStyleSheet(st.qss_frm_selected)
@@ -67,30 +93,6 @@ class ConfigDialog(QDialog, Ui_Dialog):
         f = self.findChild(QFrame, name="frm_param_ier")
         if f:
             self.get_value_label(f).setText(f"{ier_i.value:{ier_i.value_format}}:{ier_e.value:{ier_e.value_format}}")
-
-    def set_styles(self):
-        self.line.hide()
-        self.setStyleSheet("background-color: " + st.BLACK + "; color: lightgrey;")
-        self.frm_params_auto.setStyleSheet(st.qss_frm_top)
-        self.frm_op_mode.setStyleSheet(st.qss_frm_group)
-        self.frm_buttons.setStyleSheet(st.qss_frm_group)
-        self.frm_values.setStyleSheet(st.qss_frm_group)
-        self.lbl_title_op_mode.setStyleSheet("background-color: rgba(0, 0, 0, 0)")
-        self.lbl_title_basic_params.setStyleSheet("background-color: rgba(0, 0, 0, 0)")
-        self.lbl_title_right.setStyleSheet("background-color: rgba(0, 0, 0, 0)")
-        self.frm_aceptar.setStyleSheet(st.qss_frm_but_enabled)
-        self.frm_cancelar.setStyleSheet(st.qss_frm_but_enabled)
-        self.frm_volver.setStyleSheet(st.qss_frm_but_enabled)
-        self.frm_left_arrow.setStyleSheet(st.qss_frm_top)
-        self.frm_right_arrow.setStyleSheet(st.qss_frm_top)
-        self.frm_left_arrow_2.setStyleSheet(st.qss_frm_top)
-        self.frm_right_arrow_2.setStyleSheet(st.qss_frm_top)
-        self.frm_param_op_mode_pcv.hide()
-        self.frm_param_op_mode_simv.hide()
-        frames = self.findChildren(QFrame)
-        for f in frames:
-            if f.objectName().startswith('frm_param_'):
-                f.setStyleSheet(st.qss_frm_top)
 
     def setup_ui(self):
         try:
@@ -231,6 +233,7 @@ class ConfigDialog(QDialog, Ui_Dialog):
                 param = self.params[self.selected_param]
                 self.get_value_label(self.selected_param_frame).setText(f"{param.value:{param.value_format}}")
             self.selected_param_frame.setStyleSheet(st.qss_frm_top)
+            self.unselect_child_frames(self.selected_param_frame.parent())
             self.selected_param = None
             self.selected_param_frame = None
         self.setup_ui()
@@ -302,15 +305,17 @@ class ConfigDialog(QDialog, Ui_Dialog):
 
     def confirm_param(self):
         if self.selected_param == ParamEnum.ier.name:
-            self.params[ParamEnum.ier_i.name].value = self.current_value
-            self.params[ParamEnum.ier_e.name].value = self.current_value_2
+            Parameter.set(self.params[ParamEnum.ier_i.name], self.current_value, self.params)
+            Parameter.set(self.params[ParamEnum.ier_e.name], self.current_value_2, self.params)
         else:
-            self.params[self.selected_param].value = self.current_value
+            Parameter.set(self.params[self.selected_param], self.current_value, self.params)
         self.selected_param_frame.setStyleSheet(st.qss_frm_top)
+        self.unselect_child_frames(self.selected_param_frame.parent())
         self.selected_param = None
         self.selected_param_frame = None
         self.setup_ui()
         self.uncommited_change = False
+        self.set_labels()
 
     def frame_pressed(self, frame: QFrame, event: QMouseEvent):
         if frame.parent().objectName() == "frm_values":
@@ -319,7 +324,7 @@ class ConfigDialog(QDialog, Ui_Dialog):
                 return
             elif not self.uncommited_change:
                 self.unselect_child_frames(frame.parent())
-                frame.setStyleSheet(st.qss_frm_selected + st.qss_lbl_yellow)
+                frame.setStyleSheet(st.qss_frm_selected)
                 param_name = frame.objectName().replace("frm_param_", "")
 
                 self.selected_param = param_name
@@ -328,8 +333,18 @@ class ConfigDialog(QDialog, Ui_Dialog):
                 if param_name == ParamEnum.ier.name:
                     self.current_value = self.params[ParamEnum.ier_i.name].value
                     self.current_value_2 = self.params[ParamEnum.ier_e.name].value
+                    dep1 = Parameter.get_dependents(self.params[ParamEnum.ier_i.name], self.params[ParamEnum.mode.name].value)
+                    dep2 = Parameter.get_dependents(self.params[ParamEnum.ier_e.name], self.params[ParamEnum.mode.name].value)
+                    dependents = dep1 + list(set(dep2) - set(dep1))
                 else:
                     self.current_value = self.params[param_name].value
+                    dependents = Parameter.get_dependents(self.params[param_name], self.params[ParamEnum.mode.name].value)
+
+                for dep in dependents:
+                    frame_name = "frm_param_" + dep
+                    f = self.findChild(QFrame, name=frame_name)
+                    if f:
+                        f.setStyleSheet(st.qss_frm_top + st.qss_lbl_yellow)
 
                 self.setup_ui()
                 self.update_ui()

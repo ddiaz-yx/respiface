@@ -43,6 +43,32 @@ class Parameter:
         self.options = ()
         self.measured = measured
 
+    @classmethod
+    def get_dependents(cls, param, mode):
+        if mode == OpModEnum.vcv.value:
+            if param.name in (ParamEnum.tvm.name, ParamEnum.ier_i.name, ParamEnum.ier_e.name, ParamEnum.brpm.name):
+                return [ParamEnum.mf.name]
+            elif param.name == ParamEnum.mf.name:
+                return [ParamEnum.tvm.name]
+        return []
+
+    @classmethod
+    def set(cls, param, value, params):
+        param.value = value
+        mode = params[ParamEnum.mode.name].value
+        if mode == OpModEnum.vcv.value:
+            ier_i = params[ParamEnum.ier_i.name].value
+            ier_e = params[ParamEnum.ier_e.name].value
+            brt = 60 / params[ParamEnum.brpm.name].value
+            ier = ier_i / ier_e
+            if param.name in (ParamEnum.tvm.name, ParamEnum.ier_i.name, ParamEnum.ier_e.name, ParamEnum.brpm.name):
+                tvm = params[ParamEnum.tvm.name].value
+                mf = tvm * (1 + ier) / (ier * brt)
+                params[ParamEnum.mf.name].value = mf*60/1000
+            elif param.name == ParamEnum.mf.name:
+                mf = params[ParamEnum.mf.name].value*1000/60
+                params[ParamEnum.tvm.name].value = mf * ier * brt / (1 + ier)
+
 
 class OpMode:
     def __init__(self, name):
