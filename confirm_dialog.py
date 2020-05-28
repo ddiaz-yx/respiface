@@ -18,12 +18,12 @@ class ConfirmDialog(QDialog, Ui_Dialog):
         self.frm_yes.mousePressEvent = partial(self.frm_yes_pressed)
         self.frm_no.mousePressEvent = partial(self.frm_no_pressed)
         self.set_styles()
+        self.setCursor(QtCore.Qt.BlankCursor)
 
     def set_styles(self):
         self.setStyleSheet("background-color: black")
         self.frm_yes.setStyleSheet(st.qss_frm_top)
         self.frm_no.setStyleSheet(st.qss_frm_top)
-
 
     def frm_no_pressed(self, event: QMouseEvent):
         self.reject()
