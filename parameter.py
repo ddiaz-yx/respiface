@@ -27,7 +27,8 @@ PLOT_TIME_SCALES = [5, 20, 60]
 
 
 class Parameter:
-    def __init__(self, name: str = "", screen_name="", units="", min_=None, max_=None, default=None, step=None, adjustable: bool = True, fmt=".1f"):
+
+    def __init__(self, name: str = "", screen_name="", units="", min_=None, max_=None, default=None, step=None, adjustable: bool = True, fmt=".1f", measured=False):
         self.name = name
         self.screen_name = screen_name
         self.units = units
@@ -40,6 +41,7 @@ class Parameter:
         self.adjustable = adjustable
         self.value = 0
         self.options = ()
+        self.measured = measured
 
 
 class OpMode:

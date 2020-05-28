@@ -205,7 +205,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 continue
             label = self.findChild(QLabel, name="lbl_" + name)
             if label:
-                label.setText(f"{p.value:{p.value_format}}")
+                if p.measured:
+                    label.setText(f"{p.units} [{p.value:{p.value_format}}]")
+                else:
+                    label.setText(f"{p.value:{p.value_format}}")
 
         # ier
         ier_i = self.params[ParamEnum.ier_i.name]
@@ -228,8 +231,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         pad = 0.025
         y_max = 20
         self.plt_pressure.setRange(xRange=[0, span + 0.5], yRange=[-pad * y_max, y_max * (1 + pad)], update=True, padding=0)
-        y_max = 5
-        self.plt_flow.setRange(xRange=[0, span + 0.5], yRange=[-pad * y_max, y_max * (1 + pad)], update=True, padding=0)
+        y_max = 40
+        self.plt_flow.setRange(xRange=[0, span + 0.5], yRange=[-(1 + pad) * y_max, y_max * (1 + pad)], update=True, padding=0)
 
     def read_config(self):
         self.gscale_options = tuple(self.cfg["gscale"]["options"])
@@ -242,6 +245,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             step = self.cfg["resp_params"][p]["step"]
             default = self.cfg["resp_params"][p]["default"]
             units = self.cfg["resp_params"][p]["units"]
+            measured = self.cfg["resp_params"][p]["measured"]
             options = None
             try:
                 options = tuple(self.cfg["resp_params"][p]["options"])
@@ -257,7 +261,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             fmt = tuple(f for f in fmt.split(",")) if "," in fmt else fmt
 
             self.params[p] = Parameter(name=p, screen_name=screen_name, units=units, min_=min_, max_=max_, step=step,
-                                       fmt=fmt, default=default)
+                                       fmt=fmt, default=default, measured=measured)
             if options is not None:
                 self.params[p].options = options
                 self.params[p].value_as_index = True
@@ -315,7 +319,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def draw_plots(self):
         t1 = Thread(target=self.draw_top)
         t2 = Thread(target=self.draw_bottom)
-        t3 = Thread(target=self.draw_stats)
+        t3 = Thread(target=self.update_current_labels)
         t1.start()
         t2.start()
         t3.start()
@@ -324,7 +328,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         t3.join()
 
     def draw_top(self):
-        if not len(self.dq_cf):
+        if not len(self.dq_cp):
             return
         x_lead, y_lead, x_trail, y_trail = self.time_arrange_data(np.array(self.dq_cp), edge_value=-0.5)
         self.p_curve_trail.setData(x_trail, y_trail, _callSync='off')
@@ -339,14 +343,19 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.f_curve_lead.setData(x_lead, y_lead, _callSync='off')
         # self.f_curve_lead.setData(np.append(x_lead, x_trail), np.append(y_lead, y_trail), _callSync='off')
 
-    def draw_stats(self):
+    def update_current_labels(self):
         if len(self.dq_p_mmax):
             p_mmax_label = self.findChild(QLabel, name="lbl_cpmax")
             p_mmax_label.setText(f"{self.dq_p_mmax.pop():.2f}")
         if len(self.dq_p_mavg):
             p_mavg_label = self.findChild(QLabel, name="lbl_cpavg")
             p_mavg_label.setText(f"{self.dq_p_mavg.pop():.2f}")
-
+        if len(self.dq_cf):
+            cf_label = self.findChild(QLabel, name="lbl_current_tf")
+            cf_label.setText(f"{self.dq_cf[-1][1]:.2f}")
+        if len(self.dq_tf):
+            tvm_label = self.findChild(QLabel, name="lbl_current_tvm")
+            tvm_label.setText(f"{self.dq_tf[-1][1]:.2f}")
 
     def time_arrange_data(self, data, edge_value):
         time_span = self.gscale_options[self.gscale_idx]

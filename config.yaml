@@ -8,6 +8,7 @@ resp_params:
     default: 200
     step: 10
     format: .0f
+    measured: True
   brpm:  #Respiraciones por minuto
     screen_name: Resp. por min
     units: ""
@@ -16,6 +17,7 @@ resp_params:
     default: 20
     step: 1
     format: .0f
+    measured: False
   ier_i:
     screen_name: "Ratio I:E"
     units: ""
@@ -24,6 +26,7 @@ resp_params:
     default: 1
     step: 1
     format: .0f
+    measured: False
   ier_e:
     screen_name: "Ratio I:E"
     units: ""
@@ -32,6 +35,7 @@ resp_params:
     default: 3
     step: 1
     format: .0f
+    measured: False
   fio2:
     screen_name: FiO2
     units: "%"
@@ -40,6 +44,7 @@ resp_params:
     default: 21
     step: 1
     format: .0f
+    measured: True
   peep:
     screen_name: PEEP
     units: cm H2O
@@ -48,14 +53,16 @@ resp_params:
     default: 5
     step: 1
     format: .0f
+    measured: True
   tf:
-    screen_name: Flujo max
+    screen_name: Flujo
     units: L/min
     min: 1
     max: 10
     default: 5
     step: 0.5
     format: .1f
+    measured: True
 gscale: # Escala de tiempo de los graficos
   options: [5, 20, 60]
 modes:

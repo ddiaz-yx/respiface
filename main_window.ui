@@ -282,7 +282,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="lbl_peep">
+          <widget class="QLabel" name="lbl_current_peep">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
              <horstretch>0</horstretch>
@@ -305,7 +305,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="label_6">
+          <widget class="QLabel" name="lbl_peep">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
              <horstretch>0</horstretch>
@@ -314,6 +314,9 @@
            </property>
            <property name="text">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;cm H&lt;span style=&quot; vertical-align:sub;&quot;&gt;2&lt;/span&gt;O [5.0]&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
@@ -523,7 +526,7 @@
             </font>
            </property>
            <property name="text">
-            <string>Flujo max</string>
+            <string>Flujo</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignCenter</set>
@@ -531,7 +534,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="lbl_tf">
+          <widget class="QLabel" name="lbl_current_tf">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
              <horstretch>0</horstretch>
@@ -554,7 +557,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="label_14">
+          <widget class="QLabel" name="lbl_tf">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
              <horstretch>0</horstretch>
@@ -563,6 +566,9 @@
            </property>
            <property name="text">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;L/min [25.0]&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
@@ -618,7 +624,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="lbl_fio2">
+          <widget class="QLabel" name="lbl_current_fio2">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
              <horstretch>0</horstretch>
@@ -641,7 +647,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="label_16">
+          <widget class="QLabel" name="lbl_fio2">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
              <horstretch>0</horstretch>
@@ -650,6 +656,9 @@
            </property>
            <property name="text">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;% [50.0]&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
@@ -705,7 +714,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="lbl_tvm">
+          <widget class="QLabel" name="lbl_current_tvm">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
              <horstretch>0</horstretch>
@@ -728,7 +737,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="label_12">
+          <widget class="QLabel" name="lbl_tvm">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
              <horstretch>0</horstretch>
@@ -737,6 +746,9 @@
            </property>
            <property name="text">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;ml [500]&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
