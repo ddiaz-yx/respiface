@@ -53,7 +53,6 @@ class ParamSetDialog(QDialog, Ui_Dialog):
         self.btn_down.pressed.connect(self.btn_down_pressed)
         self.btn_up_left.pressed.connect(self.btn_up_left_pressed)
         self.btn_down_left.pressed.connect(self.btn_down_left_pressed)
-        self.horizontalSlider.valueChanged.connect(self.slider_value_changed)
 
         self.param: Parameter = None
         self.param2: Parameter = None
@@ -94,6 +93,7 @@ class ParamSetDialog(QDialog, Ui_Dialog):
 
             # self.lbl_param_value.setText(f"{self.value_i:{self.format_i}} : {self.value:{self.format}}")
             self.horizontalSlider.hide()
+            self.horizontalSlider.setEnabled(False)
             self.btn_down_left.show()
             self.btn_up_left.show()
             self.lbl_max.hide()
@@ -111,9 +111,11 @@ class ParamSetDialog(QDialog, Ui_Dialog):
             self.btn_up_left.hide()
             self.horizontalSlider.setMaximum(self.param.value_max)
             self.horizontalSlider.setMinimum(self.param.value_min)
-            # self.horizontalSlider.setValue(self.param.value)
+            self.horizontalSlider.setValue(self.param.value)
             self.horizontalSlider.setSingleStep(self.param.value_step)
+            self.horizontalSlider.setEnabled(True)
             self.horizontalSlider.show()
+            self.horizontalSlider.valueChanged.connect(self.slider_value_changed)
             self.lbl_max.setText(f"{self.param.value_max:{self.param.value_format}}")
             self.lbl_min.setText(f"{self.param.value_min:{self.param.value_format}}")
             self.lbl_max.show()
@@ -141,7 +143,6 @@ class ParamSetDialog(QDialog, Ui_Dialog):
                 self.btn_down_left.setDisabled(False)
         else:
             self.lbl_param_value.setText(f"{self.value:{self.format}}")
-            self.horizontalSlider.setValue(self.value)
 
         if self.value > self.value_max - self.step:
             self.btn_up.setDisabled(True)
@@ -152,17 +153,27 @@ class ParamSetDialog(QDialog, Ui_Dialog):
         else:
             self.btn_down.setDisabled(False)
 
+    def update_slider(self):
+        try:
+            self.horizontalSlider.valueChanged.disconnect()
+        except TypeError:
+            pass
+        self.horizontalSlider.setValue(self.value)
+        self.horizontalSlider.valueChanged.connect(self.slider_value_changed)
+
     def slider_value_changed(self, val):
-        self.value -= self.value%self.step
+        self.value = val - (val%self.step)
         self.update_ui()
 
     def btn_up_pressed(self):
         self.value += self.step
         self.update_ui()
+        self.update_slider()
 
     def btn_down_pressed(self):
         self.value -= self.step
         self.update_ui()
+        self.update_slider()
 
     def btn_up_left_pressed(self):
         self.value_i += self.step_i
