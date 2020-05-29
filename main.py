@@ -395,7 +395,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def draw_top(self):
         if not len(self.dq_cp):
             return
-        x_lead, y_lead, x_trail, y_trail = self.time_arrange_data(np.array(self.dq_cp), edge_value=-0.5)
+        x_lead, y_lead, x_trail, y_trail = self.time_arrange_data(np.array(self.dq_cp))
         self.p_curve_trail.setData(x_trail, y_trail, _callSync='off')
         self.p_curve_lead.setData(x_lead, y_lead, _callSync='off')
         # self.p_curve_lead.setData(np.append(x_lead, x_trail), np.append(y_lead, y_trail), _callSync='off')
@@ -403,7 +403,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def draw_bottom(self):
         if not len(self.dq_cf):
             return
-        x_lead, y_lead, x_trail, y_trail = self.time_arrange_data(np.array(self.dq_cf), edge_value=0)
+        x_lead, y_lead, x_trail, y_trail = self.time_arrange_data(np.array(self.dq_cf))
         self.f_curve_trail.setData(x_trail, y_trail, _callSync='off')
         self.f_curve_lead.setData(x_lead, y_lead, _callSync='off')
         # self.f_curve_lead.setData(np.append(x_lead, x_trail), np.append(y_lead, y_trail), _callSync='off')
@@ -422,7 +422,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             tvm_label = self.findChild(QLabel, name="lbl_current_tvm")
             tvm_label.setText(f"{self.dq_tv[-1][1]:.2f}")
 
-    def time_arrange_data(self, data, edge_value):
+    def time_arrange_data(self, data):
         time_span = self.gscale_options[self.gscale_idx]
         time_span_points = time_span * DATA_REFRESH_FREQ
 
@@ -433,22 +433,21 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         y_lead = data[:, 1]
         if x_lead[-1] >= time_span:
             self.gtime_ini = time.time()
+
         try:
             if len(x_lead) < time_span_points:
                 x_trail, y_trail = [], []
             else:
                 trail_idx = len(x_lead) - time_span_points
                 x_trail = x_lead[trail_idx:]
-                x_trail = x_trail - x_trail[0] + x_lead[-1]  # + time_span / 100
+                x_trail = x_trail - x_trail[0] + x_lead[-1]
                 y_trail = y_lead[trail_idx:]
 
                 # flancos
-                x_trail[0] = x_trail[1] - 0.005
-                y_trail[0] = edge_value
-
-            # flancos
-            x_lead[-1] = x_lead[-2] + 0.005
-            y_lead[-1] = edge_value
+                gap = int(10 * time_span_points / 1000)
+                indexes = np.arange(0, gap)
+                x_trail = np.delete(x_trail, indexes)
+                y_trail = np.delete(y_trail, indexes)
 
         except IndexError as e:
             x_lead, y_lead, x_trail, y_trail = [], [], [], []
