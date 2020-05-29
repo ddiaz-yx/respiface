@@ -28,6 +28,57 @@ MAX_STATS_POINTS = 10
 UNDER_CURVE_ALPHA = "55"
 
 
+class StyleSheetBlinkingAnimation(object):
+
+    def __init__(self, widget, style1, style2, duration, loop_count=1):
+        self._initial_loop_count = loop_count
+        self.loop_count = loop_count
+
+        state1 = QtCore.QState()
+        state2 = QtCore.QState()
+
+        self.timer1 = QtCore.QTimer(state1)
+        self.timer1.setInterval(duration)
+        self.timer1.setSingleShot(True)
+        self.timer2 = QtCore.QTimer(state2)
+        self.timer2.setInterval(duration)
+        self.timer2.setSingleShot(True)
+
+        state1.entered.connect(self._check_loop_count)
+        state1.assignProperty(widget, 'styleSheet', style1)
+        state2.entered.connect(self._update_loop_count)
+        state2.entered.connect(self.timer2.start)
+        state2.assignProperty(widget, 'styleSheet', style2)
+
+        state1.addTransition(self.timer1.timeout, state2)
+        state2.addTransition(self.timer2.timeout, state1)
+
+        self.machine = QtCore.QStateMachine()
+        self.machine.addState(state1)
+        self.machine.addState(state2)
+        self.machine.setInitialState(state1)
+
+    def start(self):
+        if self.machine.isRunning():
+            self.machine.stop()
+        self.loop_count = self._initial_loop_count
+        self.machine.start()
+
+    def stop(self):
+        self.timer1.stop()
+        self.timer2.stop()
+        self.machine.stop()
+
+    def _check_loop_count(self):
+        if self.loop_count <= 0:
+            self.stop()
+        else:
+            self.timer1.start()
+
+    def _update_loop_count(self):
+        self.loop_count -= 1
+
+
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, config_, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
@@ -52,6 +103,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.setCursor(Qt.BlankCursor)
 
+        self.block_button_animation = StyleSheetBlinkingAnimation(self.frm_pant_bloq, st.qss_frm_top + st.qss_frm_selected, st.qss_frm_top, 70, 4)
+
         self.gscale_options = (5, 20, 60)
         self.gscale_idx = 0  # Indice de gscale options
         self.gtime_ini = time.time()  # Marca el inicio de la ventana de gráficos
@@ -59,12 +112,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.set_styles()
         self.set_up_plots()
 
-        self.frm_peep.mousePressEvent = partial(self.adjust_param, ParamEnum.peep)
-        self.frm_fio2.mousePressEvent = partial(self.adjust_param, ParamEnum.fio2, )
-        self.frm_mf.mousePressEvent = partial(self.adjust_param, ParamEnum.mf, )
-        self.frm_ratioie.mousePressEvent = partial(self.adjust_param, ParamEnum.ier, )
-        self.frm_rpm.mousePressEvent = partial(self.adjust_param, ParamEnum.brpm, )
-        self.frm_tvm.mousePressEvent = partial(self.adjust_param, ParamEnum.tvm, )
+        self.set_blockable_ui_mouse_press_events()
         self.frm_gscale.mousePressEvent = partial(self.new_scale)
         self.frm_pant_bloq.mousePressEvent = partial(self.toggle_block)
 
@@ -90,9 +138,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.splash.close()  # En producción reemplazar por .show()
 
         # Signals and slots
-        self.frm_config.mousePressEvent = partial(self.btnConfig_pressed, )
         self.proxy.signal_params_properties_set.connect(self.set_params_properties_from_controller)
         self.proxy.signal_new_param_values.connect(self.update_param_value_from_controller)
+
+    def set_blockable_ui_mouse_press_events(self):
+        self.frm_peep.mousePressEvent = partial(self.adjust_param, ParamEnum.peep)
+        self.frm_fio2.mousePressEvent = partial(self.adjust_param, ParamEnum.fio2, )
+        self.frm_mf.mousePressEvent = partial(self.adjust_param, ParamEnum.mf, )
+        self.frm_ratioie.mousePressEvent = partial(self.adjust_param, ParamEnum.ier, )
+        self.frm_rpm.mousePressEvent = partial(self.adjust_param, ParamEnum.brpm, )
+        self.frm_tvm.mousePressEvent = partial(self.adjust_param, ParamEnum.tvm, )
+        self.frm_config.mousePressEvent = partial(self.btnConfig_pressed, )
 
     def update_param_value_from_controller(self, params_: dict):
         '''
@@ -399,13 +455,19 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         return x_lead, y_lead, x_trail, y_trail
 
+    def block_button_blink(self, event: QMouseEvent):
+        self.block_button_animation.start()
+
     def toggle_block(self, event: QMouseEvent):
         style = st.qss_frm_top
         self.blocked = not self.blocked
-        for ui in self.blockable_ui:
-            ui.setDisabled(self.blocked)
         if self.blocked:
             style += st.qss_frm_selected
+            for ui in self.blockable_ui:
+                ui.mousePressEvent = partial(self.block_button_blink)
+        else:
+            self.block_button_animation.stop()
+            self.set_blockable_ui_mouse_press_events()
         self.frm_pant_bloq.setStyleSheet(style)
 
 
