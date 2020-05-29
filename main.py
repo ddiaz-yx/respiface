@@ -15,7 +15,7 @@ from ui_main_window import Ui_MainWindow
 import yaml
 from parameter import Parameter, ParamEnum, OpMode, OpModEnum, PLOT_TIME_SCALES
 from collections import deque
-from data_proxy import DataProxy
+from data_proxy import DataProxy, DataMessage
 import time
 from pathlib import Path
 import logging, logging.config
@@ -97,6 +97,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dq_p_mmax = deque([], MAX_STATS_POINTS)
         self.dq_p_mavg = deque([], MAX_STATS_POINTS)
         self.dq_user_set_param = deque()  # cola de parametros seteados por usuario, por enviar al controlador
+        self.dq_data_message = deque()
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
         self.plot_update_timer = QtCore.QTimer()
         self.mem_check_timer = QtCore.QTimer()
@@ -116,14 +117,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.frm_gscale.mousePressEvent = partial(self.new_scale)
         self.frm_pant_bloq.mousePressEvent = partial(self.toggle_block)
 
-        self.blockable_ui = [self.frm_peep, self.frm_fio2, self.frm_mf, self.frm_ratioie, self.frm_rpm, self.frm_tvm, self.frm_op_mode, self.frm_config]
+        self.blockable_ui = [self.frm_peep, self.frm_fio2, self.frm_mf, self.frm_ratioie, self.frm_rpm, self.frm_tvm, self.frm_op_mode, self.frm_config, self.frm_start_stop]
         self.blocked = False
+        self.running = False
 
         self.plot_update_timer.timeout.connect(self.draw_plots)
-        self.plot_update_timer.start(DATA_REFRESH_FREQ)
         # self.mem_check_timer.timeout.connect(lambda : self.logger.info(f"Mem usage: {psutil.Process(os.getpid()).memory_info().rss}"))
         # self.mem_check_timer.start(1000)
-        self.proxy = DataProxy(self.dq_cp, self.dq_cf, self.dq_tv, self.dq_p_mmax, self.dq_p_mavg, self.dq_user_set_param)
+        self.proxy = DataProxy(self.dq_cp, self.dq_cf, self.dq_tv, self.dq_p_mmax, self.dq_p_mavg, self.dq_user_set_param, self.dq_data_message)
         self.proxy.start()
 
         self.dialog_set_param = ParamSetDialog(self.centralwidget)
@@ -140,6 +141,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # Signals and slots
         self.proxy.signal_params_properties_set.connect(self.set_params_properties_from_controller)
         self.proxy.signal_new_param_values.connect(self.update_param_value_from_controller)
+        self.proxy.signal_state_report.connect(self.received_state_report)
 
     def set_blockable_ui_mouse_press_events(self):
         self.frm_peep.mousePressEvent = partial(self.adjust_param, ParamEnum.peep)
@@ -149,6 +151,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.frm_rpm.mousePressEvent = partial(self.adjust_param, ParamEnum.brpm, )
         self.frm_tvm.mousePressEvent = partial(self.adjust_param, ParamEnum.tvm, )
         self.frm_config.mousePressEvent = partial(self.btnConfig_pressed, )
+        self.frm_start_stop.mousePressEvent = partial(self.button_start_stop_pressed)
 
     def update_param_value_from_controller(self, params_: dict):
         '''
@@ -184,6 +187,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.splash.hide()
         del self.splash
 
+    def received_state_report(self, running: bool):
+        self.running = running
+        self.update_running_state()
+
     def set_styles(self):
         self.setStyleSheet("QMainWindow {background-color: " + st.BLACK + "};")
         self.frm_cpmax.setStyleSheet(st.qss_frm_top + st.qss_lbl_yellow)
@@ -199,6 +206,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.frm_config.setStyleSheet(st.qss_frm_top)
         self.frm_pant_bloq.setStyleSheet(st.qss_frm_top)
         self.frm_config.setContentsMargins(0, 0, 0, 0)
+        self.frm_start_stop.setStyleSheet(st.qss_frm_start_button)
         # self.lbl_config.setPixmap(QPixmap('resources/gear2.png'))
 
     def set_up_plots(self):
@@ -468,6 +476,27 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.block_button_animation.stop()
             self.set_blockable_ui_mouse_press_events()
         self.frm_pant_bloq.setStyleSheet(style)
+
+    def update_running_state(self):
+        label = self.frm_start_stop.findChild(QLabel)
+        if self.running:
+            self.plot_update_timer.start(DATA_REFRESH_FREQ)
+            self.frm_start_stop.setStyleSheet(st.qss_frm_stop_button)
+            if label:
+                label.setText("Detener")
+        else:
+            self.plot_update_timer.stop()
+            self.frm_start_stop.setStyleSheet(st.qss_frm_start_button)
+            if label:
+                label.setText("Comenzar")
+
+    def button_start_stop_pressed(self, event: QMouseEvent):
+        self.running = not self.running
+        if self.running:
+            self.dq_data_message.append(DataMessage(DataMessage.START))
+        else:
+            self.dq_data_message.append(DataMessage(DataMessage.STOP))
+        self.update_running_state()
 
 
 pg.setConfigOption('antialias', True)

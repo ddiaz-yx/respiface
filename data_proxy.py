@@ -44,13 +44,37 @@ class OpMode(Enum):
     SIMV = 2
 
 
+class DataMessage(object):
+
+    START = "start"
+    STOP = "stop"
+
+    def __init__(self, message_type, params = None):
+        self._message_type = message_type
+        self._params = params
+
+    def formatted_msg(self):
+        params = ""
+        if self._params:
+            first = True
+            for k, v in self._params.items():
+                if not first:
+                    params = "{}&{}={}".format(params, k, v)
+                else:
+                    first = False
+                    params = "{}={}".format(k, v)
+        msg = "{}?{}\n".format(self._message_type, params).encode('ascii')
+        return msg
+
+
 class DataProxy(QThread):
     signal_params_properties_set = pyqtSignal(
         dict)  # Se emite una vez hayan sido configurados todos los parámetros (min, max y default)
     signal_new_param_values = pyqtSignal(
         dict)  # Se emite cuando se desde el socket llega un nuevo valor para un parámetro
+    signal_state_report = pyqtSignal(bool)
 
-    def __init__(self, cur_pressure: deque, cur_flow: deque, total_flow: deque, p_mmax: deque, p_mmavg: deque, user_set_param: deque):
+    def __init__(self, cur_pressure: deque, cur_flow: deque, total_flow: deque, p_mmax: deque, p_mmavg: deque, user_set_param: deque, data_msg: deque):
         QThread.__init__(self)
         self.logger = logging.getLogger('gui')
         try:
@@ -73,6 +97,7 @@ class DataProxy(QThread):
         self.socket.setblocking(True)
         self.operation_mode = OpMode.VCV
         self.user_set_param: deque = user_set_param
+        self.data_msg: deque = data_msg
         self.params = dict()
         for p in PARAM_NAMES:
             self.params[p] = Parameter(name=p)
@@ -111,6 +136,7 @@ class DataProxy(QThread):
         It can receive either a Parameter object or a dictionay of Parameters
         """
         while True:
+            msg = None
             if len(self.user_set_param):
                 msg = bytes("set_conf?".encode('ascii'))
                 p = self.user_set_param.popleft()
@@ -130,6 +156,11 @@ class DataProxy(QThread):
                     msg += bytes('&'.encode('ascii'))
 
                 msg = msg[:-1] + bytes("\n".encode('ascii'))  # Removes last '&' and adds end-line
+            elif len(self.data_msg):
+                dm = self.data_msg.popleft()
+                msg = dm.formatted_msg()
+
+            if msg is not None:
                 self.logger.info(f"Sending {msg} to socket")
                 if self.connection is not None:
                     self.connection.sendall(msg)
@@ -202,6 +233,10 @@ class DataProxy(QThread):
                     self.params[param].value_max = float(value)
                 self.ack()
                 self.check_params()
+            elif os.path == "state":
+                for k, v in data.items():
+                    if k == "running":
+                        self.signal_state_report.emit(bool(int(v)))
             elif o.path == 'd':
                 num_samples = int(data['n'])
                 timestamp = float(data['ts'])
