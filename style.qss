@@ -59,3 +59,7 @@ QPushButton {
         background:         lightgray;
         color:              black;
 }
+
+QGroupBox {
+	color:					lightgray;
+}

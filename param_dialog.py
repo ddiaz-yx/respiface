@@ -5,10 +5,11 @@ Sublcase de QDialog que modifica aspectos de estilo únicamente
 from PyQt5.QtGui import QFont
 
 from ui_param_set import Ui_Dialog
-from PyQt5.QtWidgets import QDialog
+from PyQt5.QtWidgets import QDialog, QGroupBox, QLabel
 from PyQt5 import QtCore, Qt
 from PyQt5.QtCore import QEvent
 from parameter import Parameter, ParamEnum
+import copy
 
 css = '''
 QSlider::groove:horizontal {
@@ -56,6 +57,8 @@ class ParamSetDialog(QDialog, Ui_Dialog):
 
         self.param: Parameter = None
         self.param2: Parameter = None
+        self.params = None
+        self.affected_params = None
 
         self.format = ""
         self.value = 0
@@ -69,8 +72,10 @@ class ParamSetDialog(QDialog, Ui_Dialog):
         self.value_i_min = 0  # para el caso de I:E
         self.step_i = 1
 
-    def set_parameter(self, p: Parameter, p2: Parameter = None):
+    def set_parameter(self, p: Parameter, params):
         self.param = p
+        self.params = copy.deepcopy(params)
+        self.affected_params = []
         if p.units:
             self.lbl_param_name.setText(self.param.screen_name + " [" + p.units + "]")
         else:
@@ -78,7 +83,7 @@ class ParamSetDialog(QDialog, Ui_Dialog):
         print(self.param.name)
 
         if self.param.name == ParamEnum.ier_e.name:
-            self.param2 = p2
+            self.param2 = self.params[ParamEnum.ier_i.name]
             self.format = self.param.value_format
             self.value_max = self.param.value_max
             self.value_min = self.param.value_min
@@ -99,6 +104,10 @@ class ParamSetDialog(QDialog, Ui_Dialog):
             self.lbl_max.hide()
             self.lbl_min.hide()
             self.lbl_param_value.setFont(QFont('Arial', IE_VALUE_FONT_SIZE))
+
+            dep1 = Parameter.get_dependents(self.param2, self.params[ParamEnum.mode.name].value)
+            dep2 = Parameter.get_dependents(self.param, self.params[ParamEnum.mode.name].value)
+            dependents = dep1 + list(set(dep2) - set(dep1))
         else:
             self.format = self.param.value_format
             self.value = self.param.value
@@ -121,6 +130,26 @@ class ParamSetDialog(QDialog, Ui_Dialog):
             self.lbl_max.show()
             self.lbl_min.show()
             self.lbl_param_value.setFont(QFont('Arial', DEFAULT_VALUE_FONT_SIZE))
+
+            dependents = Parameter.get_dependents(self.param, self.params[ParamEnum.mode.name].value)
+
+        group = self.findChild(QGroupBox, name="grp_affected_params")
+        if group:
+            if len(dependents):
+                    group.setVisible(True)
+                    for idx, dep in enumerate(dependents):
+                        param = self.params[dep]
+                        self.affected_params.append(param)
+                        lbl_name = group.findChild(QLabel, name="lbl_aff_param_name_{}".format(idx + 1))
+                        lbl_value = group.findChild(QLabel, name="lbl_aff_param_value_{}".format(idx + 1))
+                        if lbl_name and lbl_value:
+                            if len(param.units) > 0:
+                                lbl_name.setText("{} [{}]".format(param.screen_name, param.units))
+                            else:
+                                lbl_name.setText("{}".format(param.screen_name))
+                            lbl_value.setText("{:.2f}".format(param.value))
+            else:
+                group.setVisible(False)
 
         self.update_ui()
         print(f"Param: {self.param.name}")
@@ -152,6 +181,19 @@ class ParamSetDialog(QDialog, Ui_Dialog):
             self.btn_down.setDisabled(True)
         else:
             self.btn_down.setDisabled(False)
+
+        if self.affected_params:
+            # update affected params values
+            if self.param.name == ParamEnum.ier_e.name:
+                Parameter.set(self.params[ParamEnum.ier_i.name], self.value_i, self.params)
+                Parameter.set(self.params[self.param.name], self.value, self.params)
+            else:
+                Parameter.set(self.params[self.param.name], self.value, self.params)
+
+            # show updated values
+            for idx, p in enumerate(self.affected_params):
+                lbl_value = self.findChild(QLabel, name="lbl_aff_param_value_{}".format(idx + 1))
+                lbl_value.setText("{:.2f}".format(p.value))
 
     def update_slider(self):
         try:

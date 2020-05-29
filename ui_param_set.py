@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'param_set_v2.ui'
+# Form implementation generated from reading ui file 'param_set.ui'
 #
-# Created by: PyQt5 UI code generator 5.12.3
+# Created by: PyQt5 UI code generator 5.14.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -46,13 +46,13 @@ class Ui_Dialog(object):
         self.btn_down_left.setFont(font)
         self.btn_down_left.setObjectName("btn_down_left")
         self.lbl_param_value = QtWidgets.QLabel(self.frame)
-        self.lbl_param_value.setGeometry(QtCore.QRect(291, 180, 221, 60))
+        self.lbl_param_value.setGeometry(QtCore.QRect(291, 180, 221, 70))
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.lbl_param_value.sizePolicy().hasHeightForWidth())
         self.lbl_param_value.setSizePolicy(sizePolicy)
-        self.lbl_param_value.setMinimumSize(QtCore.QSize(0, 60))
+        self.lbl_param_value.setMinimumSize(QtCore.QSize(0, 70))
         self.lbl_param_value.setAlignment(QtCore.Qt.AlignCenter)
         self.lbl_param_value.setObjectName("lbl_param_value")
         self.lbl_max = QtWidgets.QLabel(self.frame)
@@ -110,6 +110,16 @@ class Ui_Dialog(object):
         font.setPointSize(28)
         self.btn_up_left.setFont(font)
         self.btn_up_left.setObjectName("btn_up_left")
+        self.grp_affected_params = QtWidgets.QGroupBox(self.frame)
+        self.grp_affected_params.setGeometry(QtCore.QRect(640, 100, 141, 231))
+        self.grp_affected_params.setObjectName("grp_affected_params")
+        self.lbl_aff_param_name_1 = QtWidgets.QLabel(self.grp_affected_params)
+        self.lbl_aff_param_name_1.setGeometry(QtCore.QRect(10, 30, 121, 16))
+        self.lbl_aff_param_name_1.setObjectName("lbl_aff_param_name_1")
+        self.lbl_aff_param_value_1 = QtWidgets.QLabel(self.grp_affected_params)
+        self.lbl_aff_param_value_1.setGeometry(QtCore.QRect(8, 50, 121, 20))
+        self.lbl_aff_param_value_1.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
+        self.lbl_aff_param_value_1.setObjectName("lbl_aff_param_value_1")
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
@@ -127,3 +137,6 @@ class Ui_Dialog(object):
         self.btn_anular.setText(_translate("Dialog", "Anular"))
         self.lbl_param_name.setText(_translate("Dialog", "Param [units]"))
         self.btn_up_left.setText(_translate("Dialog", "/\\"))
+        self.grp_affected_params.setTitle(_translate("Dialog", "Parámetros afectados"))
+        self.lbl_aff_param_name_1.setText(_translate("Dialog", "Vol. Tidal [mL]:"))
+        self.lbl_aff_param_value_1.setText(_translate("Dialog", "500"))

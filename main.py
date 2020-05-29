@@ -354,9 +354,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         Adjustment of single params ( by clicking its frame in the main screen)
         '''
         if param_.name == ParamEnum.ier.name:
-            self.dialog_set_param.set_parameter(self.params[ParamEnum.ier_e.name], self.params[ParamEnum.ier_i.name])
+            self.dialog_set_param.set_parameter(self.params[ParamEnum.ier_e.name], self.params)
         else:
-            self.dialog_set_param.set_parameter(self.params[param_.name])
+            self.dialog_set_param.set_parameter(self.params[param_.name], self.params)
         result = self.dialog_set_param.exec_()
         if result:
             if param_.name == ParamEnum.ier.name:
