@@ -429,10 +429,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             p_mavg_label.setText(f"{self.dq_p_mavg.pop():.2f}")
         if len(self.dq_cf):
             cf_label = self.findChild(QLabel, name="lbl_current_fl")
-            cf_label.setText(f"{self.dq_cf[-1][1]:.2f}")
+            cf_label.setText(f"{self.dq_cf[-1][1]:.0f}")
         if len(self.dq_tv):
             tvm_label = self.findChild(QLabel, name="lbl_current_tvm")
-            tvm_label.setText(f"{self.dq_tv[-1][1]:.2f}")
+            tvm_label.setText(f"{self.dq_tv[-1][1]:.0f}")
 
     def time_arrange_data(self, data):
         time_span = self.gscale_options[self.gscale_idx]
