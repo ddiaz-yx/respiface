@@ -31,6 +31,9 @@ UNDER_CURVE_ALPHA = "55"
 class StyleSheetBlinkingAnimation(object):
 
     def __init__(self, widget, style1, style2, duration, loop_count=1):
+        self._widget = widget
+        self._style1 = style1
+        self._style2 = style2
         self._initial_loop_count = loop_count
         self.loop_count = loop_count
 
@@ -60,7 +63,7 @@ class StyleSheetBlinkingAnimation(object):
 
     def start(self):
         if self.machine.isRunning():
-            self.machine.stop()
+            return
         self.loop_count = self._initial_loop_count
         self.machine.start()
 
@@ -68,6 +71,7 @@ class StyleSheetBlinkingAnimation(object):
         self.timer1.stop()
         self.timer2.stop()
         self.machine.stop()
+        self._widget.setStyleSheet(self._style1)
 
     def _check_loop_count(self):
         if self.loop_count <= 0:
