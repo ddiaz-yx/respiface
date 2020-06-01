@@ -36,8 +36,7 @@ class ConfigDialog(QDialog, Ui_Dialog):
         self.selected_param: Parameter = None
         self.selected_param_frame = QFrame()
         self.setup_ui()
-        self.current_value = None
-        self.current_value_2 = None
+        self.d_params = None
         self.frm_aceptar.mousePressEvent = partial(self.frm_aceptar_pressed)
         self.frm_cancelar.mousePressEvent = partial(self.frm_cancelar_pressed)
         self.frm_volver.mousePressEvent = partial(self.frm_volver_pressed)
@@ -171,35 +170,49 @@ class ConfigDialog(QDialog, Ui_Dialog):
         else:
             param = self.params[self.selected_param]
         step = param.value_step
-        if self.current_value + step > param.value_max + EPS:
+        val = self.d_params[param.name]['value']
+        if val + step > param.value_max + EPS:
             self.frm_right_arrow.setEnabled(False)
-        if self.current_value - step > param.value_min - EPS:
+        if val - step > param.value_min - EPS:
             self.frm_left_arrow.setEnabled(True)
-        if self.current_value - step < param.value_min - EPS:
+        if val - step < param.value_min - EPS:
             self.frm_left_arrow.setEnabled(False)
-        if self.current_value + step < param.value_max + EPS:
+        if val + step < param.value_max + EPS:
             self.frm_right_arrow.setEnabled(True)
 
         if self.selected_param == ParamEnum.ier.name:
             param = self.params[ParamEnum.ier_e.name]
             step = param.value_step
-            if self.current_value_2 + step > param.value_max + EPS:
+            val = self.d_params[ParamEnum.ier_e.name]['value']
+            if val + step > param.value_max + EPS:
                 self.frm_right_arrow_2.setEnabled(False)
-            if self.current_value_2 - step > param.value_min - EPS:
+            if val - step > param.value_min - EPS:
                 self.frm_left_arrow_2.setEnabled(True)
-            if self.current_value_2 - step < param.value_min - EPS:
+            if val - step < param.value_min - EPS:
                 self.frm_left_arrow_2.setEnabled(False)
-            if self.current_value_2 + step < param.value_max + EPS:
+            if val + step < param.value_max + EPS:
                 self.frm_right_arrow_2.setEnabled(True)
+
+        for name, param in self.d_params.items():
+            # update affected params values
+            if param['dependent']:
+                param['value'] = Parameter.calculate_param(name, self.d_params, self.params)
+
+            frame_name = "frm_param_" + name
+            f = self.findChild(QFrame, name=frame_name)
+            if f:
+                label = self.get_value_label(f)
+                label.setText(f"{param['value']:{self.params[name].value_format}}")
 
         label = self.get_value_label(self.selected_param_frame)
         if self.selected_param == ParamEnum.ier.name:
             ier_i_param = self.params[ParamEnum.ier_i.name]
             ier_e_param = self.params[ParamEnum.ier_e.name]
-            label.setText(f"{self.current_value:{ier_i_param.value_format}}:{self.current_value_2:{ier_e_param.value_format}}")
+            val2 = self.d_params[ParamEnum.ier_e.name]['value']
+            label.setText(f"{val:{ier_i_param.value_format}}:{val2:{ier_e_param.value_format}}")
         else:
             param = self.params[self.selected_param]
-            label.setText(f"{self.current_value:{param.value_format}}")
+            label.setText(f"{val:{param.value_format}}")
 
     def update_slider(self, slider, value, valueChangedCallback):
         try:
@@ -225,13 +238,7 @@ class ConfigDialog(QDialog, Ui_Dialog):
 
     def frm_cancelar_pressed(self, event: QMouseEvent):
         if self.selected_param is not None:
-            if self.selected_param == ParamEnum.ier.name:
-                ier_i_param = self.params[ParamEnum.ier_i.name]
-                ier_e_param = self.params[ParamEnum.ier_e.name]
-                self.get_value_label(self.selected_param_frame).setText(f"{ier_i_param.value:{ier_i_param.value_format}}:{ier_e_param.value:{ier_e_param.value_format}}")
-            else:
-                param = self.params[self.selected_param]
-                self.get_value_label(self.selected_param_frame).setText(f"{param.value:{param.value_format}}")
+            self.set_labels()
             self.selected_param_frame.setStyleSheet(st.qss_frm_top)
             self.unselect_child_frames(self.selected_param_frame.parent())
             self.selected_param = None
@@ -240,7 +247,7 @@ class ConfigDialog(QDialog, Ui_Dialog):
         self.uncommited_change = False
 
     def frm_volver_pressed(self, event: QMouseEvent):
-        dlg = ConfirmDialog()
+        dlg = ConfirmDialog(parent=self.frm_main)
         if dlg.exec_():
             self.accept()
         else:
@@ -251,7 +258,7 @@ class ConfigDialog(QDialog, Ui_Dialog):
             param = self.params[ParamEnum.ier_i.name]
         else:
             param = self.params[self.selected_param]
-        self.current_value = self.slider_to_param_value(self.horizontalSlider, param)
+        self.d_params[param.name]['value'] = self.slider_to_param_value(self.horizontalSlider, param)
         self.update_ui()
         self.uncommited_change = True
 
@@ -262,9 +269,9 @@ class ConfigDialog(QDialog, Ui_Dialog):
             param = self.params[self.selected_param]
         step = param.value_step
         str_value = self.get_value_label(self.selected_param_frame).text()
-        self.current_value -= step
+        self.d_params[param.name]['value'] -= step
         self.update_ui()
-        self.update_slider(self.horizontalSlider, self.current_value, self.slider_value_changed)
+        self.update_slider(self.horizontalSlider, self.d_params[param.name]['value'], self.slider_value_changed)
         self.uncommited_change = True
 
     def frm_right_arrow_pressed(self, event: QMouseEvent):
@@ -274,14 +281,14 @@ class ConfigDialog(QDialog, Ui_Dialog):
             param = self.params[self.selected_param]
         step = param.value_step
         str_value = self.get_value_label(self.selected_param_frame).text()
-        self.current_value += step
+        self.d_params[param.name]['value'] += step
         self.update_ui()
-        self.update_slider(self.horizontalSlider, self.current_value, self.slider_value_changed)
+        self.update_slider(self.horizontalSlider, self.d_params[param.name]['value'], self.slider_value_changed)
         self.uncommited_change = True
 
     def slider_2_value_changed(self, val):
         param = self.params[ParamEnum.ier_e.name]
-        self.current_value_2 = self.slider_to_param_value(self.horizontalSlider_2, param)
+        self.d_params[ParamEnum.ier_e.name]['value'] += self.slider_to_param_value(self.horizontalSlider_2, param)
         self.update_ui()
         self.uncommited_change = True
 
@@ -289,26 +296,23 @@ class ConfigDialog(QDialog, Ui_Dialog):
         param = self.params[ParamEnum.ier_e.name]
         step = param.value_step
         str_value = self.get_value_label(self.selected_param_frame).text()
-        self.current_value_2 -= step
+        self.d_params[ParamEnum.ier_e.name]['value'] -= step
         self.update_ui()
-        self.update_slider(self.horizontalSlider_2, self.current_value_2, self.slider_2_value_changed)
+        self.update_slider(self.horizontalSlider_2, self.d_params[ParamEnum.ier_e.name]['value'], self.slider_2_value_changed)
         self.uncommited_change = True
 
     def frm_right_arrow_2_pressed(self, event: QMouseEvent):
         param = self.params[ParamEnum.ier_e.name]
         step = param.value_step
         str_value = self.get_value_label(self.selected_param_frame).text()
-        self.current_value_2 += step
+        self.d_params[ParamEnum.ier_e.name]['value'] += step
         self.update_ui()
-        self.update_slider(self.horizontalSlider_2, self.current_value_2, self.slider_2_value_changed)
+        self.update_slider(self.horizontalSlider_2, self.d_params[ParamEnum.ier_e.name]['value'], self.slider_2_value_changed)
         self.uncommited_change = True
 
     def confirm_param(self):
-        if self.selected_param == ParamEnum.ier.name:
-            Parameter.set(self.params[ParamEnum.ier_i.name], self.current_value, self.params)
-            Parameter.set(self.params[ParamEnum.ier_e.name], self.current_value_2, self.params)
-        else:
-            Parameter.set(self.params[self.selected_param], self.current_value, self.params)
+        for name, param in self.d_params.items():
+            self.params[name].value = param['value']
         self.selected_param_frame.setStyleSheet(st.qss_frm_top)
         self.unselect_child_frames(self.selected_param_frame.parent())
         self.selected_param = None
@@ -329,18 +333,20 @@ class ConfigDialog(QDialog, Ui_Dialog):
 
                 self.selected_param = param_name
                 self.selected_param_frame = frame
+                self.d_params = {}
 
                 if param_name == ParamEnum.ier.name:
-                    self.current_value = self.params[ParamEnum.ier_i.name].value
-                    self.current_value_2 = self.params[ParamEnum.ier_e.name].value
+                    self.d_params[ParamEnum.ier_i.name] = {'value': self.params[ParamEnum.ier_i.name].value, 'dependent': False}
+                    self.d_params[ParamEnum.ier_e.name] = {'value': self.params[ParamEnum.ier_e.name].value, 'dependent': False}
                     dep1 = Parameter.get_dependents(self.params[ParamEnum.ier_i.name], self.params[ParamEnum.mode.name].value)
                     dep2 = Parameter.get_dependents(self.params[ParamEnum.ier_e.name], self.params[ParamEnum.mode.name].value)
                     dependents = dep1 + list(set(dep2) - set(dep1))
                 else:
-                    self.current_value = self.params[param_name].value
+                    self.d_params[param_name] = {'value': self.params[param_name].value, 'dependent': False}
                     dependents = Parameter.get_dependents(self.params[param_name], self.params[ParamEnum.mode.name].value)
 
                 for dep in dependents:
+                    self.d_params[dep] = {'value': self.params[dep].value, 'dependent': True}
                     frame_name = "frm_param_" + dep
                     f = self.findChild(QFrame, name=frame_name)
                     if f:
@@ -348,9 +354,11 @@ class ConfigDialog(QDialog, Ui_Dialog):
 
                 self.setup_ui()
                 self.update_ui()
-                self.update_slider(self.horizontalSlider, self.current_value, self.slider_value_changed)
                 if param_name == ParamEnum.ier.name:
-                    self.update_slider(self.horizontalSlider_2, self.current_value_2, self.slider_2_value_changed)
+                    self.update_slider(self.horizontalSlider, self.d_params[ParamEnum.ier_i.name]['value'], self.slider_value_changed)
+                    self.update_slider(self.horizontalSlider_2, self.d_params[ParamEnum.ier_i.name]['value'], self.slider_2_value_changed)
+                else:
+                    self.update_slider(self.horizontalSlider, self.d_params[param_name]['value'], self.slider_value_changed)
         elif frame.parent().objectName() == "frm_op_mode" and not self.uncommited_change:
             self.unselect_child_frames(frame.parent())
             frame.setFrameShadow(QFrame.Sunken)

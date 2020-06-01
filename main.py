@@ -359,26 +359,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.dialog_set_param.set_parameter(self.params[param_.name], self.params)
         result = self.dialog_set_param.exec_()
         if result:
-            if param_.name == ParamEnum.ier.name:
-                self.logger.info(f"New value for: {ParamEnum.ier_i.name}: {self.dialog_set_param.value_i}")
-                self.logger.info(f"New value for: {ParamEnum.ier_e.name}: {self.dialog_set_param.value}")
-                Parameter.set(self.params[ParamEnum.ier_i.name], self.dialog_set_param.value_i, self.params)
-                Parameter.set(self.params[ParamEnum.ier_e.name], self.dialog_set_param.value, self.params)
-
-                dep1 = Parameter.get_dependents(self.params[ParamEnum.ier_i.name], self.params[ParamEnum.mode.name].value)
-                dep2 = Parameter.get_dependents(self.params[ParamEnum.ier_e.name], self.params[ParamEnum.mode.name].value)
-                dependents = dep1 + list(set(dep2) - set(dep1))
-
-                self.dq_user_set_param.append(self.params[ParamEnum.ier_i.name])  # Envia el nuevo valor al controlador
-                self.dq_user_set_param.append(self.params[ParamEnum.ier_e.name])  # Envia el nuevo valor al controlador
-            else:
-                self.logger.info(f"New value for: {param_.name}: {self.dialog_set_param.value}")
-                Parameter.set(self.params[param_.name], self.dialog_set_param.value, self.params)
-                dependents = Parameter.get_dependents(self.params[param_.name], self.params[ParamEnum.mode.name].value)
-                self.dq_user_set_param.append(self.params[param_.name])  # Envia el nuevo valor al controlador
-
-            for dep in dependents:
-                self.dq_user_set_param.append(self.params[dep])
+            for name, param in self.dialog_set_param.d_params.items():
+                self.logger.info(f"New value for: {name}: {param['value']}")
+                self.params[name].value = param['value']
+                self.dq_user_set_param.append(self.params[name])
             self.update_param_labels()
 
     def btnConfig_pressed(self, event: QMouseEvent):

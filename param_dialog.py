@@ -58,16 +58,15 @@ class ParamSetDialog(QDialog, Ui_Dialog):
         self.param: Parameter = None
         self.param2: Parameter = None
         self.params = None
+        self.d_params = None
         self.affected_params = None
 
         self.format = ""
-        self.value = 0
         self.value_max = 0
         self.value_min = 0
         self.step = 1
 
         self.format_i = ""  # para el caso de I:E
-        self.value_i = 0  # para el caso de I:E
         self.value_i_max = 0  # para el caso de I:E
         self.value_i_min = 0  # para el caso de I:E
         self.step_i = 1
@@ -76,6 +75,7 @@ class ParamSetDialog(QDialog, Ui_Dialog):
         self.param = p
         self.params = copy.deepcopy(params)
         self.affected_params = []
+        self.d_params = {}
         if p.units:
             self.lbl_param_name.setText(self.param.screen_name + " [" + p.units + "]")
         else:
@@ -84,19 +84,20 @@ class ParamSetDialog(QDialog, Ui_Dialog):
 
         if self.param.name == ParamEnum.ier_e.name:
             self.param2 = self.params[ParamEnum.ier_i.name]
+
             self.format = self.param.value_format
             self.value_max = self.param.value_max
             self.value_min = self.param.value_min
             self.step = self.param.value_step
-            self.value = self.param.value
 
             self.format_i = self.param2.value_format
             self.value_i_max = self.param2.value_max
             self.value_i_min = self.param2.value_min
             self.step_i = self.param2.value_step
-            self.value_i = self.param2.value
 
-            # self.lbl_param_value.setText(f"{self.value_i:{self.format_i}} : {self.value:{self.format}}")
+            self.d_params[ParamEnum.ier_i.name] = {'value': self.param2.value, 'dependent': False}
+            self.d_params[ParamEnum.ier_e.name] = {'value': self.param.value, 'dependent': False}
+
             self.horizontalSlider.hide()
             self.horizontalSlider.setEnabled(False)
             self.btn_down_left.show()
@@ -110,12 +111,12 @@ class ParamSetDialog(QDialog, Ui_Dialog):
             dependents = dep1 + list(set(dep2) - set(dep1))
         else:
             self.format = self.param.value_format
-            self.value = self.param.value
             self.value_max = self.param.value_max
             self.value_min = self.param.value_min
             self.step = self.param.value_step
 
-            # self.lbl_param_value.setText(f"{self.param.value:{self.param.value_format}}")
+            self.d_params[self.param.name] = {'value': self.param.value, 'dependent': False}
+
             self.btn_down_left.hide()
             self.btn_up_left.hide()
             self.horizontalSlider.setMaximum(self.param.value_max)
@@ -132,6 +133,9 @@ class ParamSetDialog(QDialog, Ui_Dialog):
             self.lbl_param_value.setFont(QFont('Arial', DEFAULT_VALUE_FONT_SIZE))
 
             dependents = Parameter.get_dependents(self.param, self.params[ParamEnum.mode.name].value)
+
+        for dep in dependents:
+            self.d_params[dep] = {'value': self.params[dep].value, 'dependent': True}
 
         group = self.findChild(QGroupBox, name="grp_affected_params")
         if group:
@@ -154,75 +158,75 @@ class ParamSetDialog(QDialog, Ui_Dialog):
         self.update_ui()
         print(f"Param: {self.param.name}")
         print(f" format: {self.format}")
-        print(f" value: {self.value}")
         print(f" value_min: {self.value_min}")
         print(f" value_max: {self.value_max}")
         print(f" step: {self.step}")
 
     def update_ui(self):
+        val = self.d_params[self.param.name]['value']
         if self.param.name == ParamEnum.ier_e.name:
-            self.lbl_param_value.setText(f"{self.value_i:{self.format_i}}:{self.value:{self.format}}")
-            if self.value_i > self.value_i_max - self.step:
+            val2 = self.d_params[self.param2.name]['value']
+            self.lbl_param_value.setText(f"{val2:{self.format_i}}:{val:{self.format}}")
+            if val2 > self.value_i_max - self.step_i:
                 self.btn_up_left.setDisabled(True)
             else:
                 self.btn_up_left.setDisabled(False)
-            if self.value_i < self.value_i_min + self.step:
+            if val2 < self.value_i_min + self.step_i:
                 self.btn_down_left.setDisabled(True)
             else:
                 self.btn_down_left.setDisabled(False)
         else:
-            self.lbl_param_value.setText(f"{self.value:{self.format}}")
+            self.lbl_param_value.setText(f"{val:{self.format}}")
 
-        if self.value > self.value_max - self.step:
+        if val > self.value_max - self.step:
             self.btn_up.setDisabled(True)
         else:
             self.btn_up.setDisabled(False)
-        if self.value < self.value_min + self.step:
+        if val < self.value_min + self.step:
             self.btn_down.setDisabled(True)
         else:
             self.btn_down.setDisabled(False)
 
         if self.affected_params:
             # update affected params values
-            if self.param.name == ParamEnum.ier_e.name:
-                Parameter.set(self.params[ParamEnum.ier_i.name], self.value_i, self.params)
-                Parameter.set(self.params[self.param.name], self.value, self.params)
-            else:
-                Parameter.set(self.params[self.param.name], self.value, self.params)
+            for name, param in self.d_params.items():
+                # update affected params values
+                if param['dependent']:
+                    param['value'] = Parameter.calculate_param(name, self.d_params, self.params)
 
             # show updated values
             for idx, p in enumerate(self.affected_params):
                 lbl_value = self.findChild(QLabel, name="lbl_aff_param_value_{}".format(idx + 1))
-                lbl_value.setText("{:.2f}".format(p.value))
+                lbl_value.setText("{:.2f}".format(self.d_params[p.name]['value']))
 
     def update_slider(self):
         try:
             self.horizontalSlider.valueChanged.disconnect()
         except TypeError:
             pass
-        self.horizontalSlider.setValue(self.value)
+        self.horizontalSlider.setValue(self.d_params[self.param.name]['value'])
         self.horizontalSlider.valueChanged.connect(self.slider_value_changed)
 
     def slider_value_changed(self, val):
-        self.value = val - (val%self.step)
+        self.d_params[self.param.name]['value'] = val - (val%self.step)
         self.update_ui()
 
     def btn_up_pressed(self):
-        self.value += self.step
+        self.d_params[self.param.name]['value'] += self.step
         self.update_ui()
         self.update_slider()
 
     def btn_down_pressed(self):
-        self.value -= self.step
+        self.d_params[self.param.name]['value'] -= self.step
         self.update_ui()
         self.update_slider()
 
     def btn_up_left_pressed(self):
-        self.value_i += self.step_i
+        self.d_params[self.param2.name]['value'] += self.step_i
         self.update_ui()
 
     def btn_down_left_pressed(self):
-        self.value_i -= self.step_i
+        self.d_params[self.param2.name]['value'] -= self.step_i
         self.update_ui()
 
     def btn_anular_pressed(self):

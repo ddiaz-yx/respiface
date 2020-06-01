@@ -26,6 +26,10 @@ class OpModEnum(Enum):
 PLOT_TIME_SCALES = [5, 20, 60]
 
 
+def _overlay_current_value(param_name, current_values, params):
+    return params[param_name].value if param_name not in current_values else current_values[param_name]['value']
+
+
 class Parameter:
 
     def __init__(self, name: str = "", screen_name="", units="", min_=None, max_=None, default=None, step=None, adjustable: bool = True, fmt=".1f", measured=False):
@@ -53,21 +57,25 @@ class Parameter:
         return []
 
     @classmethod
-    def set(cls, param, value, params):
-        param.value = value
-        mode = params[ParamEnum.mode.name].value
+    def calculate_param(cls, param_name, current_values, params):
+        tvm = _overlay_current_value(ParamEnum.tvm.name, current_values, params)
+        brpm = _overlay_current_value(ParamEnum.brpm.name, current_values, params)
+        ier_i = _overlay_current_value(ParamEnum.ier_i.name, current_values, params)
+        ier_e = _overlay_current_value(ParamEnum.ier_e.name, current_values, params)
+        fio2 = _overlay_current_value(ParamEnum.fio2.name, current_values, params)
+        mf = _overlay_current_value(ParamEnum.mf.name, current_values, params)
+        peep = _overlay_current_value(ParamEnum.peep.name, current_values, params)
+        mode = _overlay_current_value(ParamEnum.mode.name, current_values, params)
+        brt = 60 / brpm
+        ier = ier_i / ier_e
         if mode == OpModEnum.vcv.value:
-            ier_i = params[ParamEnum.ier_i.name].value
-            ier_e = params[ParamEnum.ier_e.name].value
-            brt = 60 / params[ParamEnum.brpm.name].value
-            ier = ier_i / ier_e
-            if param.name in (ParamEnum.tvm.name, ParamEnum.ier_i.name, ParamEnum.ier_e.name, ParamEnum.brpm.name):
-                tvm = params[ParamEnum.tvm.name].value
+            if param_name == ParamEnum.mf.name:
                 mf = tvm * (1 + ier) / (ier * brt)
-                params[ParamEnum.mf.name].value = mf*60/1000
-            elif param.name == ParamEnum.mf.name:
-                mf = params[ParamEnum.mf.name].value*1000/60
-                params[ParamEnum.tvm.name].value = mf * ier * brt / (1 + ier)
+                return mf * 60 / 1000
+            elif param_name == ParamEnum.tvm.name:
+                mf = mf * 1000 / 60
+                return mf * ier * brt / (1 + ier)
+        raise NotImplementedError
 
 
 class OpMode:
