@@ -120,6 +120,7 @@ class ConfigDialog(QDialog, Ui_Dialog):
             self.frm_left_arrow.setEnabled(False)
             self.frm_right_arrow.setEnabled(False)
             self.horizontalSlider.setEnabled(False)
+            self.horizontalSlider_2.setEnabled(False)
         else:
             self.frm_left_arrow.show()
             self.frm_right_arrow.show()
@@ -138,6 +139,7 @@ class ConfigDialog(QDialog, Ui_Dialog):
             if self.selected_param == ParamEnum.ier.name:
                 ier_i_param = self.params[ParamEnum.ier_i.name]
                 ier_e_param = self.params[ParamEnum.ier_e.name]
+                self.horizontalSlider_2.setEnabled(True)
                 self.horizontalSlider.setMaximum(ier_i_param.value_max * SLIDER_MULTIPLIER)
                 self.horizontalSlider.setMinimum(ier_i_param.value_min * SLIDER_MULTIPLIER)
                 self.horizontalSlider.setSingleStep(1)
@@ -183,14 +185,14 @@ class ConfigDialog(QDialog, Ui_Dialog):
         if self.selected_param == ParamEnum.ier.name:
             param = self.params[ParamEnum.ier_e.name]
             step = param.value_step
-            val = self.d_params[ParamEnum.ier_e.name]['value']
-            if val + step > param.value_max + EPS:
+            val2 = self.d_params[ParamEnum.ier_e.name]['value']
+            if val2 + step > param.value_max + EPS:
                 self.frm_right_arrow_2.setEnabled(False)
-            if val - step > param.value_min - EPS:
+            if val2 - step > param.value_min - EPS:
                 self.frm_left_arrow_2.setEnabled(True)
-            if val - step < param.value_min - EPS:
+            if val2 - step < param.value_min - EPS:
                 self.frm_left_arrow_2.setEnabled(False)
-            if val + step < param.value_max + EPS:
+            if val2 + step < param.value_max + EPS:
                 self.frm_right_arrow_2.setEnabled(True)
 
         for name, param in self.d_params.items():
@@ -288,7 +290,7 @@ class ConfigDialog(QDialog, Ui_Dialog):
 
     def slider_2_value_changed(self, val):
         param = self.params[ParamEnum.ier_e.name]
-        self.d_params[ParamEnum.ier_e.name]['value'] += self.slider_to_param_value(self.horizontalSlider_2, param)
+        self.d_params[ParamEnum.ier_e.name]['value'] = self.slider_to_param_value(self.horizontalSlider_2, param)
         self.update_ui()
         self.uncommited_change = True
 
@@ -356,7 +358,7 @@ class ConfigDialog(QDialog, Ui_Dialog):
                 self.update_ui()
                 if param_name == ParamEnum.ier.name:
                     self.update_slider(self.horizontalSlider, self.d_params[ParamEnum.ier_i.name]['value'], self.slider_value_changed)
-                    self.update_slider(self.horizontalSlider_2, self.d_params[ParamEnum.ier_i.name]['value'], self.slider_2_value_changed)
+                    self.update_slider(self.horizontalSlider_2, self.d_params[ParamEnum.ier_e.name]['value'], self.slider_2_value_changed)
                 else:
                     self.update_slider(self.horizontalSlider, self.d_params[param_name]['value'], self.slider_value_changed)
         elif frame.parent().objectName() == "frm_op_mode" and not self.uncommited_change:
