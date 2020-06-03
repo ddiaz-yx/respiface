@@ -298,9 +298,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.gtime_ini = time.time()
         pad = 0.025
         y_max = 20
-        self.plt_pressure.setRange(xRange=[0, span + 0.5], yRange=[-pad * y_max, y_max * (1 + pad)], update=True, padding=0)
+        self.plt_pressure.setRange(xRange=[0, span*1.025], yRange=[-pad * y_max, y_max * (1 + pad)], update=True, padding=0)
         y_max = 40
-        self.plt_flow.setRange(xRange=[0, span + 0.5], yRange=[-(1 + pad) * y_max, y_max * (1 + pad)], update=True, padding=0)
+        self.plt_flow.setRange(xRange=[0, span*1.025], yRange=[-(1 + pad) * y_max, y_max * (1 + pad)], update=True, padding=0)
 
     def read_config(self):
         self.gscale_options = tuple(self.cfg["gscale"]["options"])
@@ -378,6 +378,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.update_param_labels()
 
     def draw_plots(self):
+        time_span = self.gscale_options[self.gscale_idx]
+        if time.time() - self.gtime_ini >= time_span:
+            self.gtime_ini += time_span
+
         t1 = Thread(target=self.draw_top)
         t2 = Thread(target=self.draw_bottom)
         t3 = Thread(target=self.update_current_labels)
@@ -427,23 +431,26 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         x_lead = data[:, 0] - self.gtime_ini
         y_lead = data[:, 1]
-        if x_lead[-1] >= time_span:
-            self.gtime_ini = time.time()
 
         try:
-            if len(x_lead) < time_span_points:
+            if x_lead[-1] - x_lead[0] < time_span:
                 x_trail, y_trail = [], []
             else:
-                trail_idx = len(x_lead) - time_span_points
+                trail_idx = np.argmax(x_lead > x_lead[-1] - time_span)
                 x_trail = x_lead[trail_idx:]
-                x_trail = x_trail - x_trail[0] + x_lead[-1]
+                x_trail = x_trail + time_span
                 y_trail = y_lead[trail_idx:]
 
-                # flancos
+                if x_trail[-1] > time_span:
+                    trail_end = np.argmax(x_trail > time_span)
+                    x_trail = x_trail[:trail_end]
+                    y_trail = y_trail[:trail_end]
+
                 gap = int(10 * time_span_points / 1000)
-                indexes = np.arange(0, gap)
-                x_trail = np.delete(x_trail, indexes)
-                y_trail = np.delete(y_trail, indexes)
+                if gap > len(x_trail):
+                    gap = len(x_trail)
+                x_trail = x_trail[gap:]
+                y_trail = y_trail[gap:]
 
         except IndexError as e:
             x_lead, y_lead, x_trail, y_trail = [], [], [], []
