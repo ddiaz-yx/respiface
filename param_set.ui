@@ -295,7 +295,7 @@
    <widget class="QGroupBox" name="grp_affected_params">
     <property name="geometry">
      <rect>
-      <x>640</x>
+      <x>20</x>
       <y>100</y>
       <width>141</width>
       <height>231</height>

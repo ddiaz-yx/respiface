@@ -111,7 +111,7 @@ class Ui_Dialog(object):
         self.btn_up_left.setFont(font)
         self.btn_up_left.setObjectName("btn_up_left")
         self.grp_affected_params = QtWidgets.QGroupBox(self.frame)
-        self.grp_affected_params.setGeometry(QtCore.QRect(640, 100, 141, 231))
+        self.grp_affected_params.setGeometry(QtCore.QRect(20, 100, 141, 231))
         self.grp_affected_params.setObjectName("grp_affected_params")
         self.lbl_aff_param_name_1 = QtWidgets.QLabel(self.grp_affected_params)
         self.lbl_aff_param_name_1.setGeometry(QtCore.QRect(10, 30, 121, 16))
