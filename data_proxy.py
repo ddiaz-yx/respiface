@@ -21,6 +21,7 @@ SOCKET_ADDRESS = "/tmp/touchscreen.sock"
 MAX_DATA_POINTS = 6000  # 60 segundos a 100 Hz
 SAMPLE_PERIOD = 0.01  # seconds
 SAMPLE_LENGTH_BYTES = 8
+BUF_RX_SIZE = 1048
 
 PARAM_TYPES = {
     'fio2': float,
@@ -87,6 +88,8 @@ class DataProxy(QThread):
         self.dq_tv = total_flow
         self.dq_p_mmax = p_mmax
         self.dq_p_mavg = p_mmavg
+        self.buf_rx = deque(maxlen=BUF_RX_SIZE)
+        self.parsed_data = ""
         self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.socket.bind(SOCKET_ADDRESS)
         #self.socket = socket.socket()
@@ -167,6 +170,15 @@ class DataProxy(QThread):
             else:
                 time.sleep(0.1)
 
+    def parse_buffer(self):
+        while len(self.buf_rx) > 0:
+            c = self.buf_rx.popleft()
+            if c == '\n':
+                return True
+            else:
+                self.parsed_data = "".join([self.parsed_data, c])
+        return False
+
     def run(self):
         ts = Thread(target=self.send_new_param_value, daemon=True)
         ts.start()
@@ -177,16 +189,21 @@ class DataProxy(QThread):
             self.logger.info("Peer connected !!!")
             while not self.stop.is_set():
                 try:
-                    data = self.connection.recv(2048)
+                    found_cmd = False
+                    if len(self.buf_rx) > 0:
+                        if self.parse_buffer():
+                            self.process_socket_data(self.parsed_data)
+                            found_cmd = True
+                            self.parsed_data = ""
+                    if not found_cmd:
+                        data = self.connection.recv(BUF_RX_SIZE)
+                        if len(data) > 0:
+                            for d in data.decode("utf-8"):
+                                self.buf_rx.append(d)
                 except ConnectionResetError:
                     self.logger.warning("Connection reset by peer")
                     break
-                if data == b'':  # Se cerró la conexion
-                    self.logger.warning("Connection reset by peer")
-                    break
-                else:
-                    self.process_socket_data(data)
-                    time.sleep(0.001)
+                time.sleep(0.001)
 
     def check_params(self):
         """
@@ -208,8 +225,7 @@ class DataProxy(QThread):
 
     def process_socket_data(self, data):
         try:
-            str_data = data.decode('ascii')
-            o = urlparse(str_data)
+            o = urlparse(data)
             data = dict(parse.parse_qsl(o.query))
             if o.path == 'reset_conf':
                 print("reset_conf")
