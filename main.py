@@ -23,7 +23,7 @@ import styles as st
 
 CONFIG_FILE = "config.yaml"
 DATA_REFRESH_FREQ = 50  # 50 Hz
-MAX_DATA_POINTS = 60 * DATA_REFRESH_FREQ  # 60 segundos a 50 Hz
+MAX_DATA_POINTS = 60 * DATA_REFRESH_FREQ + 50 # 60 segundos a 50 Hz
 MAX_STATS_POINTS = 10
 UNDER_CURVE_ALPHA = "55"
 
