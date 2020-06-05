@@ -44,6 +44,11 @@
      <height>480</height>
     </size>
    </property>
+   <property name="font">
+    <font>
+     <pointsize>9</pointsize>
+    </font>
+   </property>
    <layout class="QVBoxLayout" name="verticalLayout_9">
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
