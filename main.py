@@ -290,17 +290,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.gscale_idx %= len(self.gscale_options)
         self.adjust_gscale()
         self.params[ParamEnum.gscale.name].value = self.gscale_idx
-        self.dq_user_set_param.append(self.params[ParamEnum.gscale.name])
+        self.dq_user_set_param.append([self.params[ParamEnum.gscale.name]])
 
     def adjust_gscale(self):
         span = self.gscale_options[self.gscale_idx]
         self.lbl_gscale.setText(f"{span} s")
         self.gtime_ini = time.time()
         pad = 0.025
-        y_max = 20
+        y_max = 50
         self.plt_pressure.setRange(xRange=[0, span*1.025], yRange=[-pad * y_max, y_max * (1 + pad)], update=True, padding=0)
-        y_max = 40
-        self.plt_flow.setRange(xRange=[0, span*1.025], yRange=[-(1 + pad) * y_max, y_max * (1 + pad)], update=True, padding=0)
+        y_min = 40
+        y_max = 50
+        self.plt_flow.setRange(xRange=[0, span*1.025], yRange=[-(1 + pad) * y_min, y_max * (1 + pad)], update=True, padding=0)
 
     def read_config(self):
         self.gscale_options = tuple(self.cfg["gscale"]["options"])
@@ -359,10 +360,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.dialog_set_param.set_parameter(self.params[param_.name], self.params)
         result = self.dialog_set_param.exec_()
         if result:
+            params = []
             for name, param in self.dialog_set_param.d_params.items():
                 self.logger.info(f"New value for: {name}: {param['value']}")
                 self.params[name].value = param['value']
-                self.dq_user_set_param.append(self.params[name])
+                params.append(self.params[name])
+            self.dq_user_set_param.append(params)
             self.update_param_labels()
 
     def btnConfig_pressed(self, event: QMouseEvent):
@@ -373,7 +376,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         result = dialog_cfg.exec_()
         if result:
             self.params = copy.deepcopy(dialog_cfg.params)
-            self.dq_user_set_param.append(self.params)  # Envia el nuevo valor al controlador
+            self.dq_user_set_param.append([p for k, p in self.params.items()])  # Envia el nuevo valor al controlador
             print(f"Modo: {self.params['mode'].value}")
         self.update_param_labels()
 

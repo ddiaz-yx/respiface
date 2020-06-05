@@ -142,22 +142,13 @@ class DataProxy(QThread):
             msg = None
             if len(self.user_set_param):
                 msg = bytes("set_conf?".encode('ascii'))
-                p = self.user_set_param.popleft()
-                if isinstance(p, Parameter): # If it is a single parameter, put it inside a dict
-                    p = {f'{p.name}': p}
-                for param in p.values():
-                    if param.name == ParamEnum.ier.name:
-                        val_i = PARAM_TYPES[param.name](param.options[param.value].split(':')[0])
-                        val_e = PARAM_TYPES[param.name](param.options[param.value].split(':')[1])
-                        msg += bytes(f"ier_i={val_i}&ier_e={val_e}".encode('ascii'))
+                params = self.user_set_param.popleft()
+                for param in params:
+                    if param.name == ParamEnum.gscale.name:
+                        val = PLOT_TIME_SCALES[PARAM_TYPES[param.name](param.value)]
                     else:
-                        if param.name == ParamEnum.gscale.name:
-                            val = PLOT_TIME_SCALES[PARAM_TYPES[param.name](param.value)]
-                        else:
-                            val = PARAM_TYPES[param.name](param.value)
-                        msg += bytes(f"{param.name}={val}".encode('ascii'))
-                    msg += bytes('&'.encode('ascii'))
-
+                        val = PARAM_TYPES[param.name](param.value)
+                    msg += bytes(f"{param.name}={val}&".encode('ascii'))
                 msg = msg[:-1] + bytes("\n".encode('ascii'))  # Removes last '&' and adds end-line
             elif len(self.data_msg):
                 dm = self.data_msg.popleft()
