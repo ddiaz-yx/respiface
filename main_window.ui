@@ -143,6 +143,11 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <property name="font">
+            <font>
+             <pointsize>9</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;cm H&lt;span style=&quot; vertical-align:sub;&quot;&gt;2&lt;/span&gt;O&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
@@ -230,6 +235,11 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <property name="font">
+            <font>
+             <pointsize>9</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;cm H&lt;span style=&quot; vertical-align:sub;&quot;&gt;2&lt;/span&gt;O&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
@@ -316,6 +326,11 @@
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>9</pointsize>
+            </font>
            </property>
            <property name="text">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;cm H&lt;span style=&quot; vertical-align:sub;&quot;&gt;2&lt;/span&gt;O [5.0]&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -569,6 +584,11 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <property name="font">
+            <font>
+             <pointsize>9</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;L/min [25.0]&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
@@ -658,6 +678,11 @@
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>9</pointsize>
+            </font>
            </property>
            <property name="text">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;% [50.0]&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -749,6 +774,11 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <property name="font">
+            <font>
+             <pointsize>9</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;ml [500]&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
@@ -779,6 +809,7 @@
           </property>
           <property name="font">
            <font>
+            <pointsize>9</pointsize>
             <weight>75</weight>
             <bold>true</bold>
            </font>
@@ -795,7 +826,13 @@
          </widget>
         </item>
         <item>
-         <widget class="LayoutWidget" name="f_widget" native="true"/>
+         <widget class="LayoutWidget" name="f_widget" native="true">
+          <property name="font">
+           <font>
+            <pointsize>9</pointsize>
+           </font>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
@@ -814,6 +851,7 @@
           </property>
           <property name="font">
            <font>
+            <pointsize>9</pointsize>
             <weight>75</weight>
             <bold>true</bold>
            </font>
@@ -827,7 +865,13 @@
          </widget>
         </item>
         <item>
-         <widget class="LayoutWidget" name="p_widget" native="true"/>
+         <widget class="LayoutWidget" name="p_widget" native="true">
+          <property name="font">
+           <font>
+            <pointsize>9</pointsize>
+           </font>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
