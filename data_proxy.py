@@ -191,6 +191,9 @@ class DataProxy(QThread):
                         if len(data) > 0:
                             for d in data.decode("utf-8"):
                                 self.buf_rx.append(d)
+                        else:
+                            self.logger.warning("Connection reset by peer")
+                            break
                 except ConnectionResetError:
                     self.logger.warning("Connection reset by peer")
                     break
