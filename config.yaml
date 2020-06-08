@@ -48,7 +48,7 @@ resp_params:
   peep:
     screen_name: PEEP
     units: cm H2O
-    min: 5 #cm H2O
+    min: 0 #cm H2O
     max: 15
     default: 5
     step: 1
