@@ -3,7 +3,7 @@ from functools import partial
 from threading import Thread
 import numpy as np
 import pyqtgraph as pg
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QMouseEvent, QPixmap, QColor, QIcon
 from PyQt5.QtWidgets import QLabel, QFrame, QMessageBox, QSplashScreen, QDialog, QLayout
@@ -98,8 +98,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dq_cp = deque([], MAX_DATA_POINTS)
         self.dq_cf = deque([], MAX_DATA_POINTS)
         self.dq_tv = deque([], MAX_DATA_POINTS)
-        self.dq_p_mmax = deque([], MAX_STATS_POINTS)
-        self.dq_p_mavg = deque([], MAX_STATS_POINTS)
+        self.dq_p_max = deque([], MAX_STATS_POINTS)
+        self.dq_p_avg = deque([], MAX_STATS_POINTS)
+        self.dq_peep = deque([], MAX_STATS_POINTS)
+        self.dq_fio2 = deque([], MAX_STATS_POINTS)
+        self.dq_f_max = deque([], MAX_STATS_POINTS)
         self.dq_user_set_param = deque()  # cola de parametros seteados por usuario, por enviar al controlador
         self.dq_data_message = deque()
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
@@ -128,7 +131,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.plot_update_timer.timeout.connect(self.draw_plots)
         # self.mem_check_timer.timeout.connect(lambda : self.logger.info(f"Mem usage: {psutil.Process(os.getpid()).memory_info().rss}"))
         # self.mem_check_timer.start(1000)
-        self.proxy = DataProxy(self.dq_cp, self.dq_cf, self.dq_tv, self.dq_p_mmax, self.dq_p_mavg, self.dq_user_set_param, self.dq_data_message)
+        self.proxy = DataProxy(self.dq_cp, self.dq_cf, self.dq_tv, self.dq_p_max, self.dq_p_avg, self.dq_peep, self.dq_fio2, self.dq_f_max, self.dq_user_set_param, self.dq_data_message)
         self.proxy.start()
 
         self.dialog_set_param = ParamSetDialog(self.centralwidget)
@@ -214,6 +217,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # self.lbl_config.setPixmap(QPixmap('resources/gear2.png'))
 
     def set_up_plots(self):
+        font = QtGui.QFont()
+        font.setPointSize(9)
+
         # PRESION -----------------------------------------------
         self.lbl_plot_top_title.setText("Presión [cm H2O]")
         self.lbl_plot_top_title.setStyleSheet('QLabel{color: ' + st.YELLOW + '}')
@@ -229,6 +235,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.plt_pressure.getAxis('bottom').setPen({'color': st.YELLOW, 'width': 1})
         self.plt_pressure.getAxis('left').setPen({'color': st.YELLOW, 'width': 1})
         self.plt_pressure.getAxis('bottom').setStyle(showValues=False)
+        self.plt_pressure.getAxis('left').setFont(font)
 
         self.p_curve_lead = self.plt_pressure.plot([-10], [0], pen={'color': st.YELLOW, 'width': 1.5},
                                                    fillLevel=-0.5, brush=st.YELLOW + UNDER_CURVE_ALPHA)
@@ -249,6 +256,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.plt_flow.setMouseEnabled(x=False, y=False)
         self.plt_flow.getAxis('bottom').setPen({'color': st.GREEN, 'width': 1})
         self.plt_flow.getAxis('left').setPen({'color': st.GREEN, 'width': 1})
+        self.plt_pressure.getAxis('left').setFont(font)
+        self.plt_pressure.getAxis('bottom').setFont(font)
 
         self.f_curve_lead = self.plt_flow.plot([-10], [0], pen={'color': st.GREEN, 'width': 1.5}, fillLevel=-0.5,
                                                brush=st.GREEN + UNDER_CURVE_ALPHA)
@@ -412,15 +421,21 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # self.f_curve_lead.setData(np.append(x_lead, x_trail), np.append(y_lead, y_trail), _callSync='off')
 
     def update_current_labels(self):
-        if len(self.dq_p_mmax):
+        if len(self.dq_p_max):
             p_mmax_label = self.findChild(QLabel, name="lbl_cpmax")
-            p_mmax_label.setText(f"{self.dq_p_mmax.pop():.2f}")
-        if len(self.dq_p_mavg):
+            p_mmax_label.setText(f"{self.dq_p_max.popleft():.2f}")
+        if len(self.dq_p_avg):
             p_mavg_label = self.findChild(QLabel, name="lbl_cpavg")
-            p_mavg_label.setText(f"{self.dq_p_mavg.pop():.2f}")
-        if len(self.dq_cf):
+            p_mavg_label.setText(f"{self.dq_p_avg.popleft():.2f}")
+        if len(self.dq_peep):
+            peep_label = self.findChild(QLabel, name="lbl_current_peep")
+            peep_label.setText(f"{self.dq_peep.popleft():.2f}")
+        if len(self.dq_f_max):
             cf_label = self.findChild(QLabel, name="lbl_current_fl")
-            cf_label.setText(f"{self.dq_cf[-1][1]:.0f}")
+            cf_label.setText(f"{self.dq_f_max.popleft():.0f}")
+        if len(self.dq_fio2):
+            fio2_label = self.findChild(QLabel, name="lbl_current_fio2")
+            fio2_label.setText(f"{self.dq_fio2.popleft():.0f}")
         if len(self.dq_tv):
             tvm_label = self.findChild(QLabel, name="lbl_current_tvm")
             tvm_label.setText(f"{self.dq_tv[-1][1]:.0f}")

@@ -75,7 +75,7 @@ class DataProxy(QThread):
         dict)  # Se emite cuando se desde el socket llega un nuevo valor para un parámetro
     signal_state_report = pyqtSignal(bool)
 
-    def __init__(self, cur_pressure: deque, cur_flow: deque, total_flow: deque, p_mmax: deque, p_mmavg: deque, user_set_param: deque, data_msg: deque):
+    def __init__(self, cur_pressure: deque, cur_flow: deque, total_flow: deque, p_max: deque, p_avg: deque, peep: deque, fio2: deque, f_max: deque, user_set_param: deque, data_msg: deque):
         QThread.__init__(self)
         self.logger = logging.getLogger('gui')
         try:
@@ -86,8 +86,11 @@ class DataProxy(QThread):
         self.dq_cp = cur_pressure
         self.dq_cf = cur_flow
         self.dq_tv = total_flow
-        self.dq_p_mmax = p_mmax
-        self.dq_p_mavg = p_mmavg
+        self.dq_p_max = p_max
+        self.dq_p_avg = p_avg
+        self.dq_peep = peep
+        self.dq_fio2 = fio2
+        self.dq_f_max = f_max
         self.buf_rx = deque(maxlen=BUF_RX_SIZE)
         self.parsed_data = ""
         self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -253,19 +256,31 @@ class DataProxy(QThread):
                 cp_vals = self.parse_data(num_samples, data['cp'], timestamp)
                 cf_vals = self.parse_data(num_samples, data['cf'], timestamp)
                 tv_vals = self.parse_data(num_samples, data['tv'], timestamp)
-                p_mmax = self.parse_stats(num_samples, data['cp_mmax'])
-                p_mavg = self.parse_stats(num_samples, data['cp_mavg'])
+                p_max = self.parse_stats(num_samples, data['cp_max'])
+                p_avg = self.parse_stats(num_samples, data['cp_avg'])
+                peep = self.parse_stats(num_samples, data['peep'])
+                fio2 = self.parse_stats(num_samples, data['fio2'])
+                f_max = self.parse_stats(num_samples, data['mf'])
                 if cp_vals:
                     self.dq_cp.append(cp_vals)
                 if cf_vals:
                     self.dq_cf.append(cf_vals)
                 if tv_vals:
                     self.dq_tv.append(tv_vals)
-                if p_mmax:
-                    for val in p_mmax:
-                        self.dq_p_mmax.append(val)
-                if p_mavg:
-                    for val in p_mavg:
-                        self.dq_p_mavg.append(val)
+                if p_max:
+                    for val in p_max:
+                        self.dq_p_max.append(val)
+                if p_avg:
+                    for val in p_avg:
+                        self.dq_p_avg.append(val)
+                if peep:
+                    for val in peep:
+                        self.dq_peep.append(val)
+                if fio2:
+                    for val in fio2:
+                        self.dq_fio2.append(val)
+                if f_max:
+                    for val in f_max:
+                        self.dq_f_max.append(val)
         except ValueError as e:
             self.logger.exception("")
