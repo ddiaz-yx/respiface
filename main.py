@@ -26,6 +26,9 @@ DATA_REFRESH_FREQ = 50  # 50 Hz
 MAX_DATA_POINTS = 60 * DATA_REFRESH_FREQ + 50 # 60 segundos a 50 Hz
 MAX_STATS_POINTS = 10
 UNDER_CURVE_ALPHA = "55"
+P_MAX_CHANGE_SCALE_THRESHOLD = 0.1
+F_MAX_CHANGE_SCALE_THRESHOLD = 0.1
+F_MIN_CHANGE_SCALE_THRESHOLD = 0.1
 
 
 class StyleSheetBlinkingAnimation(object):
@@ -108,6 +111,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
 		self.plot_update_timer = QtCore.QTimer()
 		self.mem_check_timer = QtCore.QTimer()
+
+		self.plots_y_ranges = {
+			'pressure': {'min': 0.0, 'max': 1.0, 'min_pos': 1.0, 'max_neg': -1.0},
+			'flow': {'min': -1.0, 'max': 1.0, 'min_pos': 1.0, 'max_neg': -1.0}
+		}
 
 		self.setCursor(Qt.BlankCursor)
 
@@ -302,15 +310,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		self.dq_user_set_param.append([self.params[ParamEnum.gscale.name]])
 
 	def adjust_gscale(self):
+		self.gtime_ini = time.time()
+		self.set_plots_ranges()
+
+	def set_plots_ranges(self):
 		span = self.gscale_options[self.gscale_idx]
 		self.lbl_gscale.setText(f"{span} s")
-		self.gtime_ini = time.time()
 		pad = 0.025
-		y_max = 50
-		self.plt_pressure.setRange(xRange=[0, span*1.025], yRange=[-pad * y_max, y_max * (1 + pad)], update=True, padding=0)
-		y_min = 40
-		y_max = 50
-		self.plt_flow.setRange(xRange=[0, span*1.025], yRange=[-(1 + pad) * y_min, y_max * (1 + pad)], update=True, padding=0)
+		self.plt_pressure.setRange(xRange=[0, span*1.025], yRange=[-pad * self.plots_y_ranges['pressure']['max'], self.plots_y_ranges['pressure']['max'] * (1 + P_MAX_CHANGE_SCALE_THRESHOLD)], update=True, padding=0)
+		self.plt_flow.setRange(xRange=[0, span*1.025], yRange=[(1 + F_MIN_CHANGE_SCALE_THRESHOLD) * self.plots_y_ranges['flow']['min'], self.plots_y_ranges['flow']['max'] * (1 + F_MAX_CHANGE_SCALE_THRESHOLD)], update=True, padding=0)
 
 	def read_config(self):
 		self.gscale_options = tuple(self.cfg["gscale"]["options"])
@@ -407,18 +415,38 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 	def draw_top(self):
 		if not len(self.dq_cp):
 			return
-		x_lead, y_lead, x_trail, y_trail = self.time_arrange_data(np.array(self.dq_cp))
+		x_lead, y_lead, x_trail, y_trail, data_min, data_max = self.time_arrange_data(np.array(self.dq_cp))
+
+		if data_max < self.plots_y_ranges['pressure']['min_pos']:
+			data_max = self.plots_y_ranges['pressure']['min_pos']
+		if P_MAX_CHANGE_SCALE_THRESHOLD <= abs((data_max - self.plots_y_ranges['pressure']['max'])/data_max):
+			self.plots_y_ranges['pressure']['max'] = data_max
+			self.set_plots_ranges()
+
 		self.p_curve_trail.setData(x_trail, y_trail, _callSync='off')
 		self.p_curve_lead.setData(x_lead, y_lead, _callSync='off')
-		# self.p_curve_lead.setData(np.append(x_lead, x_trail), np.append(y_lead, y_trail), _callSync='off')
 
 	def draw_bottom(self):
 		if not len(self.dq_cf):
 			return
-		x_lead, y_lead, x_trail, y_trail = self.time_arrange_data(np.array(self.dq_cf))
+		x_lead, y_lead, x_trail, y_trail, data_min, data_max = self.time_arrange_data(np.array(self.dq_cf))
+
+		if data_max < self.plots_y_ranges['flow']['min_pos']:
+			data_max = self.plots_y_ranges['flow']['min_pos']
+		if data_min > self.plots_y_ranges['flow']['max_neg']:
+			data_min = self.plots_y_ranges['flow']['max_neg']
+		should_update_ranges = False
+		if F_MAX_CHANGE_SCALE_THRESHOLD <= abs((data_max - self.plots_y_ranges['flow']['max']) / data_max):
+			self.plots_y_ranges['flow']['max'] = data_max
+			should_update_ranges = True
+		if F_MIN_CHANGE_SCALE_THRESHOLD <= abs((data_min - self.plots_y_ranges['flow']['min']) / data_min):
+			self.plots_y_ranges['flow']['min'] = data_min
+			should_update_ranges = True
+		if should_update_ranges:
+			self.set_plots_ranges()
+
 		self.f_curve_trail.setData(x_trail, y_trail, _callSync='off')
 		self.f_curve_lead.setData(x_lead, y_lead, _callSync='off')
-		# self.f_curve_lead.setData(np.append(x_lead, x_trail), np.append(y_lead, y_trail), _callSync='off')
 
 	def update_current_labels(self):
 		if len(self.dq_p_max):
@@ -473,7 +501,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		except IndexError as e:
 			x_lead, y_lead, x_trail, y_trail = [], [], [], []
 
-		return x_lead, y_lead, x_trail, y_trail
+		x_lead_start_idx = np.argmax(x_lead >= 0)
+		lead_max = np.max(y_lead[x_lead_start_idx:])
+		lead_min = np.min(y_lead[x_lead_start_idx:])
+		if len(y_trail) > 0:
+			trail_max = np.max(y_trail)
+			trail_min = np.min(y_trail)
+			data_min = min([lead_min, trail_min])
+			data_max = max([lead_max, trail_max])
+		else:
+			data_min = lead_min
+			data_max = lead_max
+		return x_lead, y_lead, x_trail, y_trail, data_min, data_max
 
 	def block_button_blink(self, event: QMouseEvent):
 		self.block_button_animation.start()
