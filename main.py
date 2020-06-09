@@ -375,7 +375,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 			self.dialog_set_param.set_parameter(self.params[ParamEnum.ier_e.name], self.params)
 		else:
 			self.dialog_set_param.set_parameter(self.params[param_.name], self.params)
+		self.plot_update_timer.stop()
 		result = self.dialog_set_param.exec_()
+		self.plot_update_timer.start()
 		if result:
 			params = []
 			for name, param in self.dialog_set_param.d_params.items():
@@ -389,8 +391,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		'''
 		Adjust all params in a single screen
 		'''
+		self.plot_update_timer.stop()
 		dialog_cfg = ConfigDialog(params=self.params, parent=self.centralwidget)
 		result = dialog_cfg.exec_()
+		self.plot_update_timer.start()
 		if result:
 			self.params = copy.deepcopy(dialog_cfg.params)
 			self.dq_user_set_param.append([p for k, p in self.params.items()])  # Envia el nuevo valor al controlador
