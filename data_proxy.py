@@ -73,7 +73,7 @@ class DataProxy(QThread):
 		dict)  # Se emite una vez hayan sido configurados todos los parámetros (min, max y default)
 	signal_new_param_values = pyqtSignal(
 		dict)  # Se emite cuando se desde el socket llega un nuevo valor para un parámetro
-	signal_state_report = pyqtSignal(bool)
+	signal_status_report = pyqtSignal(bool)
 
 	def __init__(self, cur_pressure: deque, cur_flow: deque, total_flow: deque, p_max: deque, p_avg: deque, peep: deque, fio2: deque, f_max: deque, user_set_param: deque, data_msg: deque):
 		QThread.__init__(self)
@@ -246,10 +246,11 @@ class DataProxy(QThread):
 					self.params[param].value_max = float(value)
 				self.ack()
 				self.check_params()
-			elif os.path == "state":
+			elif o.path == "status":
 				for k, v in data.items():
 					if k == "running":
-						self.signal_state_report.emit(bool(int(v)))
+						self.signal_status_report.emit(bool(int(v)))
+				self.ack()
 			elif o.path == 'd':
 				num_samples = int(data['n'])
 				timestamp = float(data['ts'])

@@ -156,7 +156,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		# Signals and slots
 		self.proxy.signal_params_properties_set.connect(self.set_params_properties_from_controller)
 		self.proxy.signal_new_param_values.connect(self.update_param_value_from_controller)
-		self.proxy.signal_state_report.connect(self.received_state_report)
+		self.proxy.signal_status_report.connect(self.received_state_report)
 
 	def set_blockable_ui_mouse_press_events(self):
 		self.frm_peep.mousePressEvent = partial(self.adjust_param, ParamEnum.peep)
@@ -536,6 +536,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 	def update_running_state(self):
 		label = self.frm_start_stop.findChild(QLabel)
 		if self.running:
+			self.gtime_ini = time.time()
 			self.plot_update_timer.start(DATA_REFRESH_FREQ)
 			self.frm_start_stop.setStyleSheet(st.qss_frm_stop_button)
 			if label:
@@ -545,6 +546,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 			self.frm_start_stop.setStyleSheet(st.qss_frm_start_button)
 			if label:
 				label.setText("Comenzar")
+			self.dq_cp.clear()
+			self.dq_cf.clear()
+			self.dq_tv.clear()
+			self.dq_p_max.clear()
+			self.dq_p_avg.clear()
+			self.dq_peep.clear()
+			self.dq_fio2.clear()
+			self.dq_f_max.clear()
 
 	def button_start_stop_pressed(self, event: QMouseEvent):
 		self.running = not self.running
@@ -552,7 +561,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 			self.dq_data_message.append(DataMessage(DataMessage.START))
 		else:
 			self.dq_data_message.append(DataMessage(DataMessage.STOP))
-		self.update_running_state()
 
 
 pg.setConfigOption('antialias', True)
