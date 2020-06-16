@@ -17,6 +17,7 @@ class ParamEnum(Enum):
 	peep = auto()  # PEEP
 	ast = auto()  # Alarm silence time
 	mode = auto()  # Modo de operación
+	pt = auto()		# plateu time
 
 
 class OpModEnum(Enum):
@@ -51,7 +52,7 @@ class Parameter:
 	@classmethod
 	def get_dependents(cls, param, mode):
 		if mode == OpModEnum.vcv.value:
-			if param.name in (ParamEnum.tvm.name, ParamEnum.ier_i.name, ParamEnum.ier_e.name, ParamEnum.brpm.name):
+			if param.name in (ParamEnum.tvm.name, ParamEnum.ier_i.name, ParamEnum.ier_e.name, ParamEnum.brpm.name, ParamEnum.pt.name):
 				return [ParamEnum.mf.name]
 			elif param.name == ParamEnum.mf.name:
 				return [ParamEnum.tvm.name]
@@ -67,16 +68,35 @@ class Parameter:
 		mf = _overlay_current_value(ParamEnum.mf.name, current_values, params)
 		peep = _overlay_current_value(ParamEnum.peep.name, current_values, params)
 		mode = _overlay_current_value(ParamEnum.mode.name, current_values, params)
+		it, et = Parameter.calculate_ie_times(current_values, params)
 		brt = 60 / brpm
 		ier = ier_i / ier_e
 		if mode == OpModEnum.vcv.value:
 			if param_name == ParamEnum.mf.name:
-				mf = tvm * (1 + ier) / (ier * brt)
+				mf = tvm / it
 				return mf * 60 / 1000
 			elif param_name == ParamEnum.tvm.name:
 				mf = mf * 1000 / 60
-				return mf * ier * brt / (1 + ier)
+				return mf * it
 		raise NotImplementedError
+
+	@classmethod
+	def calculate_ie_times(cls, current_values, params):
+		brpm = _overlay_current_value(ParamEnum.brpm.name, current_values, params)
+		ier_i = _overlay_current_value(ParamEnum.ier_i.name, current_values, params)
+		ier_e = _overlay_current_value(ParamEnum.ier_e.name, current_values, params)
+		mode = _overlay_current_value(ParamEnum.mode.name, current_values, params)
+		pt = _overlay_current_value(ParamEnum.pt.name, current_values, params)
+
+		if pt > 99:
+			pt = 99
+
+		period = 60 / brpm
+		it = period*ier_i/(ier_i + ier_e)
+		et = period - it
+		if mode == OpModEnum.vcv.value:
+			it *= (100-pt)/100
+		return it, et
 
 
 class OpMode:

@@ -117,6 +117,11 @@ class ConfigDialog(QDialog, Ui_Dialog):
 		except TypeError:
 			pass
 
+		if self.params['mode'].value == OpModEnum.vcv.value:
+			self.frm_param_pt.show()
+		elif self.params['mode'].value == OpModEnum.pcv.value:
+			self.frm_param_pt.hide()
+
 		if self.selected_param is None:
 			self.frm_left_arrow.hide()
 			self.frm_right_arrow.hide()
@@ -242,12 +247,14 @@ class ConfigDialog(QDialog, Ui_Dialog):
 		self.params['mode'].value = OpModEnum.pcv.value
 		self.frm_param_op_mode_pcv.setStyleSheet(st.qss_frm_selected)
 		self.frm_param_op_mode_vcv.setStyleSheet(st.qss_frm_top)
+		self.frm_param_pt.hide()
 		self.set_labels()
 
 	def frm_param_op_mode_vcv_pressed(self, event: QMouseEvent):
 		self.params['mode'].value = OpModEnum.vcv.value
 		self.frm_param_op_mode_vcv.setStyleSheet(st.qss_frm_selected)
 		self.frm_param_op_mode_pcv.setStyleSheet(st.qss_frm_top)
+		self.frm_param_pt.show()
 		self.set_labels()
 
 	def frm_aceptar_pressed(self, event: QMouseEvent):

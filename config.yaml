@@ -72,6 +72,15 @@ resp_params:
     step: 1
     format: .0f
     measured: True
+  pt:
+    screen_name: T. Plateu
+    units: "%"
+    min: 0
+    max: 99
+    default: 0
+    step: 1
+    format: .0f
+    measured: False
 gscale: # Escala de tiempo de los graficos
   options: [5, 20, 60]
 modes:
@@ -100,6 +109,9 @@ modes:
     mp:
       adjustable: False
       default: 7 #cmH2O
+    pt:
+      adjustable: True
+      default: 0
   pcv:
     tvm:
       adjustable: False
@@ -125,6 +137,9 @@ modes:
     mp:
       adjustable: True
       default: 7 #cmH2O
+    pt:
+      adjustable: False
+      default: 0
 logging:
   version: 1
   disable_existing_loggers: true
