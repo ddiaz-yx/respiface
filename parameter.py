@@ -13,6 +13,7 @@ class ParamEnum(Enum):
 	fio2 = auto()  # FiO2
 	gscale = auto()  # Escala de tiempo del gráfico
 	mf = auto()  # Flujo max
+	mp = auto()  # P max
 	peep = auto()  # PEEP
 	ast = auto()  # Alarm silence time
 	mode = auto()  # Modo de operación
@@ -79,5 +80,7 @@ class Parameter:
 
 
 class OpMode:
+
 	def __init__(self, name):
 		self.name = name
+		self.adjustable_params = []

@@ -136,7 +136,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="label_2">
+          <widget class="QLabel" name="lbl_mp">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
              <horstretch>0</horstretch>
@@ -150,6 +150,9 @@
            </property>
            <property name="text">
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;cm H&lt;span style=&quot; vertical-align:sub;&quot;&gt;2&lt;/span&gt;O&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
            </property>
           </widget>
          </item>
@@ -415,7 +418,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="label_21">
+          <widget class="QLabel" name="lbl_mp1">
            <property name="text">
             <string/>
            </property>
@@ -496,7 +499,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="label_23">
+          <widget class="QLabel" name="lbl_mp3">
            <property name="text">
             <string/>
            </property>
@@ -973,7 +976,7 @@
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
-          <widget class="QLabel" name="label_20">
+          <widget class="QLabel" name="lbl_mp0">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
              <horstretch>0</horstretch>
@@ -1107,7 +1110,7 @@
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_14">
          <item>
-          <widget class="QLabel" name="label_25">
+          <widget class="QLabel" name="lbl_mp5">
            <property name="font">
             <font>
              <pointsize>14</pointsize>

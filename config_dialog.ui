@@ -385,7 +385,7 @@
              </widget>
             </item>
             <item row="1" column="0">
-             <widget class="QFrame" name="frm_param_tvm">
+             <widget class="QFrame" name="frm_param_mode_dep_1">
               <property name="frameShape">
                <enum>QFrame::WinPanel</enum>
               </property>
@@ -505,8 +505,7 @@
                   </font>
                  </property>
                  <property name="text">
-                  <string>Conc.O2
-[%]</string>
+                  <string>&lt;html&gt;Conc.O&lt;span style=&quot; vertical-align:sub;&quot;&gt;2&lt;/span&gt;&lt;br&gt;[%]&lt;/html&gt;</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
@@ -554,8 +553,7 @@
                   </font>
                  </property>
                  <property name="text">
-                  <string>PEEP 
-[cm H2O]</string>
+                  <string>&lt;html&gt;PEEP &lt;br&gt;[cm H&lt;span style=&quot; vertical-align:sub;&quot;&gt;2&lt;/span&gt;O]&lt;/html&gt;</string>
                  </property>
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>

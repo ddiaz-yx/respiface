@@ -160,11 +160,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
 	def set_blockable_ui_mouse_press_events(self):
 		self.frm_peep.mousePressEvent = partial(self.adjust_param, ParamEnum.peep)
-		self.frm_fio2.mousePressEvent = partial(self.adjust_param, ParamEnum.fio2, )
-		self.frm_mf.mousePressEvent = partial(self.adjust_param, ParamEnum.mf, )
-		self.frm_ratioie.mousePressEvent = partial(self.adjust_param, ParamEnum.ier, )
-		self.frm_rpm.mousePressEvent = partial(self.adjust_param, ParamEnum.brpm, )
-		self.frm_tvm.mousePressEvent = partial(self.adjust_param, ParamEnum.tvm, )
+		self.frm_fio2.mousePressEvent = partial(self.adjust_param, ParamEnum.fio2,)
+		self.frm_mf.mousePressEvent = partial(self.adjust_param, ParamEnum.mf,)
+		self.frm_ratioie.mousePressEvent = partial(self.adjust_param, ParamEnum.ier,)
+		self.frm_rpm.mousePressEvent = partial(self.adjust_param, ParamEnum.brpm,)
+		self.frm_tvm.mousePressEvent = partial(self.adjust_param, ParamEnum.tvm,)
+		self.frm_cpmax.mousePressEvent = partial(self.adjust_param, ParamEnum.mp,)
+		self.frm_op_mode.mousePressEvent = partial(self.btnConfig_pressed, )
 		self.frm_config.mousePressEvent = partial(self.btnConfig_pressed, )
 		self.frm_start_stop.mousePressEvent = partial(self.button_start_stop_pressed)
 
@@ -186,7 +188,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 			except KeyError as e:
 				print("Received config for unknown parameter: " + str(e))
 
+		if 'mode' in params_:
+			self.update_adjustable()
 		self.update_param_labels()
+
 
 	def set_params_properties_from_controller(self, params_: dict):
 		'''
@@ -291,7 +296,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 			label = self.findChild(QLabel, name="lbl_" + name)
 			if label:
 				if p.measured:
-					label.setText(f"{p.units} [{p.value:{p.value_format}}]")
+					if p.adjustable:
+						label.setText(f"{p.units} [{p.value:{p.value_format}}]")
+					else:
+						label.setText(f"{p.units}")
 				else:
 					label.setText(f"{p.value:{p.value_format}}")
 
@@ -301,6 +309,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		label = self.findChild(QLabel, name="lbl_ier")
 		if label:
 			label.setText(f"{ier_i.value:{ier_i.value_format}}:{ier_e.value:{ier_e.value_format}}")
+
+	def update_adjustable(self):
+		current_mode = OpModEnum(self.params['mode'].value).name
+		for name, p in self.params.items():
+			if name == 'mode':
+				continue
+			if name in self.modes[current_mode].adjustable_params:
+				p.adjustable = True
+			else:
+				p.adjustable = False
 
 	def new_scale(self, event: QMouseEvent):
 		self.gscale_idx += 1
@@ -358,12 +376,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 			print(self.params[ParamEnum.ier.name].options)
 
 		for m in self.cfg["modes"].keys():
-			#TODO
 			assert m in list(OpModEnum.__members__)
 			self.modes[m] = OpMode(name=m)
+			for p in self.cfg['modes'][m].keys():
+				if self.cfg['modes'][m][p]['adjustable']:
+					self.modes[m].adjustable_params.append(p)
 
 		self.params['mode'] = Parameter(name='mode')
 		self.params['mode'].value = OpModEnum.vcv.value     #VCV by default upon starting
+		self.update_adjustable()
 
 		self.params[ParamEnum.gscale.name] = Parameter(name=ParamEnum.gscale.name)
 
@@ -374,7 +395,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 		if param_.name == ParamEnum.ier.name:
 			self.dialog_set_param.set_parameter(self.params[ParamEnum.ier_e.name], self.params)
 		else:
-			self.dialog_set_param.set_parameter(self.params[param_.name], self.params)
+			if self.params[param_.name].adjustable:
+				self.dialog_set_param.set_parameter(self.params[param_.name], self.params)
+			else:
+				return
 		self.plot_update_timer.stop()
 		result = self.dialog_set_param.exec_()
 		self.plot_update_timer.start()
@@ -399,6 +423,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 			self.params = copy.deepcopy(dialog_cfg.params)
 			self.dq_user_set_param.append([p for k, p in self.params.items()])  # Envia el nuevo valor al controlador
 			print(f"Modo: {self.params['mode'].value}")
+			self.update_adjustable()
+			self.set_blockable_ui_mouse_press_events()
 		self.update_param_labels()
 
 	def draw_plots(self):

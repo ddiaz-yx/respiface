@@ -47,7 +47,7 @@ resp_params:
     measured: True
   peep:
     screen_name: PEEP
-    units: cm H2O
+    units: <html>cm H<span style=" vertical-align:sub;">2</span>O</html>
     min: 0 #cm H2O
     max: 15
     default: 5
@@ -63,51 +63,66 @@ resp_params:
     step: 0.5
     format: .1f
     measured: True
+  mp:
+    screen_name: P max
+    units: <html>cm H<span style=" vertical-align:sub;">2</span>O</html>
+    min: 1
+    max: 55
+    default: 10
+    step: 1
+    format: .0f
+    measured: True
 gscale: # Escala de tiempo de los graficos
   options: [5, 20, 60]
 modes:
   vcv:
-    vtidal:
+    tvm:
       adjustable: True
-      default:
-    rpm:
+      default: 200
+    brpm:
       adjustable: True
       default: 15 # Respiraciones por minuto
-    ratioie:
+    ier_i:
       adjustable: True
-      default: 2  #1:x relación tiempo-inspiratorio : tiempo-exalatorio
+      default: 1
+    ier_e:
+      adjustable: True
+      default: 3
     fio2:
       adjustable: True
       default: 100 # porcentaje de oxigeno
-    pmax:
-      adjustable: False
-      default:
-    flujoaire:
-      adjustable: True
-      default: 50 #litros por minuto
     peep:
       adjustable: True
+      default: 5
+    mf:
+      adjustable: True
+      default: 50 # litros por minuto
+    mp:
+      adjustable: False
       default: 7 #cmH2O
   pcv:
-    vtidal:
-      adjustable: True
-      default:
-    rpm:
+    tvm:
+      adjustable: False
+      default: 200
+    brpm:
       adjustable: True
       default: 15 # Respiraciones por minuto
-    ratioie:
+    ier_i:
       adjustable: True
-      default: 2  #1:x relación tiempo-inspiratorio : tiempo-exalatorio
+      default: 1
+    ier_e:
+      adjustable: True
+      default: 3
     fio2:
       adjustable: True
       default: 100 # porcentaje de oxigeno
-    pmax:
-      adjustable: False
-      default:
-    flujoaire:
-      adjustable: True
-      default: 50 #litros por minuto
     peep:
+      adjustable: True
+      default: 5
+    mf:
+      adjustable: True
+      default: 50 # litros por minuto
+    mp:
       adjustable: True
       default: 7 #cmH2O
 logging:

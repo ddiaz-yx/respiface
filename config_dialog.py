@@ -62,29 +62,43 @@ class ConfigDialog(QDialog, Ui_Dialog):
 		self.frm_right_arrow.setStyleSheet(st.qss_frm_top)
 		self.frm_left_arrow_2.setStyleSheet(st.qss_frm_top)
 		self.frm_right_arrow_2.setStyleSheet(st.qss_frm_top)
-		self.frm_param_op_mode_pcv.hide()
 		self.frm_param_op_mode_simv.hide()
 		frames = self.findChildren(QFrame)
 		for f in frames:
 			if f.objectName().startswith('frm_param_'):
 				f.setStyleSheet(st.qss_frm_top)
 
-	def set_labels(self):
-		# Pone los valores actuales en los labels
-		if self.params['mode'].value == OpModEnum.vcv.value:
-			self.frm_param_op_mode_vcv.setStyleSheet(st.qss_frm_selected)
-			self.frm_param_op_mode_pcv.setStyleSheet(st.qss_frm_top)
-		elif self.params['mode'].value == OpModEnum.pcv.value:
-			self.frm_param_op_mode_pcv.setStyleSheet(st.qss_frm_selected)
-			self.frm_param_op_mode_vcv.setStyleSheet(st.qss_frm_top)
+	def set_frame_mode_dependent_labels(self, frame, param, idx=None):
+		if idx is None:
+			# TODO: extract idx from frame name
+			raise NotImplementedError
 
+		label = frame.findChild(QLabel, name="lbl_basic_{}".format(idx))
+		val_label = frame.findChild(QLabel, name="lbl_basic_value_{}".format(idx))
+		if label is None or val_label is None:
+			raise ValueError
+		label.setText("<html>{}<br>[{}]</html>".format(param.screen_name, param.units))
+		val_label.setText(f"{param.value:{param.value_format}}")
+
+	def set_labels(self):
 		for name, param in self.params.items():
 			if name in (ParamEnum.ier_i.name, ParamEnum.ier_e.name):
+				continue
+			elif name in (ParamEnum.tvm.name, ParamEnum.mp.name):
 				continue
 			frame_name = "frm_param_" + name
 			f = self.findChild(QFrame, name=frame_name)
 			if f:
 				self.get_value_label(f).setText(f"{param.value:{param.value_format}}")
+
+		if self.params['mode'].value == OpModEnum.vcv.value:
+			self.frm_param_op_mode_vcv.setStyleSheet(st.qss_frm_selected)
+			self.frm_param_op_mode_pcv.setStyleSheet(st.qss_frm_top)
+			self.set_frame_mode_dependent_labels(self.frm_param_mode_dep_1, self.params[ParamEnum.tvm.name], 1)
+		elif self.params['mode'].value == OpModEnum.pcv.value:
+			self.frm_param_op_mode_pcv.setStyleSheet(st.qss_frm_selected)
+			self.frm_param_op_mode_vcv.setStyleSheet(st.qss_frm_top)
+			self.set_frame_mode_dependent_labels(self.frm_param_mode_dep_1, self.params[ParamEnum.mp.name], 1)
 
 		# ier
 		ier_i = self.params[ParamEnum.ier_i.name]
@@ -228,11 +242,13 @@ class ConfigDialog(QDialog, Ui_Dialog):
 		self.params['mode'].value = OpModEnum.pcv.value
 		self.frm_param_op_mode_pcv.setStyleSheet(st.qss_frm_selected)
 		self.frm_param_op_mode_vcv.setStyleSheet(st.qss_frm_top)
+		self.set_labels()
 
 	def frm_param_op_mode_vcv_pressed(self, event: QMouseEvent):
 		self.params['mode'].value = OpModEnum.vcv.value
 		self.frm_param_op_mode_vcv.setStyleSheet(st.qss_frm_selected)
 		self.frm_param_op_mode_pcv.setStyleSheet(st.qss_frm_top)
+		self.set_labels()
 
 	def frm_aceptar_pressed(self, event: QMouseEvent):
 		if self.selected_param is not None:
@@ -332,6 +348,11 @@ class ConfigDialog(QDialog, Ui_Dialog):
 				self.unselect_child_frames(frame.parent())
 				frame.setStyleSheet(st.qss_frm_selected)
 				param_name = frame.objectName().replace("frm_param_", "")
+				if param_name == "mode_dep_1":
+					if self.params['mode'].value == OpModEnum.vcv.value:
+						param_name = ParamEnum.tvm.name
+					elif self.params['mode'].value == OpModEnum.pcv.value:
+						param_name = ParamEnum.mp.name
 
 				self.selected_param = param_name
 				self.selected_param_frame = frame

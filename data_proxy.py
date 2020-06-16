@@ -34,6 +34,7 @@ PARAM_TYPES = {
 	'tvm': int,
 	'peep': int,
 	'mf': float,
+	'mp': float,
 	'gscale': int
 }
 PARAM_NAMES = (k for k in PARAM_TYPES)
