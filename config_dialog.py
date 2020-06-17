@@ -36,15 +36,15 @@ class ConfigDialog(QDialog, Ui_Dialog):
 		self.selected_param: Parameter = None
 		self.selected_param_frame = QFrame()
 		self.setup_ui()
-		self.d_params = None
+		self.d_params = {}
 		self.frm_aceptar.mousePressEvent = partial(self.frm_aceptar_pressed)
 		self.frm_cancelar.mousePressEvent = partial(self.frm_cancelar_pressed)
 		self.frm_volver.mousePressEvent = partial(self.frm_volver_pressed)
 		self.uncommited_change = False  # flag para indica que se cambió el valor de un parámetro, pero no se ha guardado
 		self.frm_param_op_mode_pcv.mousePressEvent = partial(self.frm_param_op_mode_pcv_pressed)
 		self.frm_param_op_mode_vcv.mousePressEvent = partial(self.frm_param_op_mode_vcv_pressed)
-
 		self.set_labels()
+		self.update_ie_times()
 
 	def set_styles(self):
 		self.line.hide()
@@ -52,9 +52,12 @@ class ConfigDialog(QDialog, Ui_Dialog):
 		self.frm_op_mode.setStyleSheet(st.qss_frm_group)
 		self.frm_buttons.setStyleSheet(st.qss_frm_group)
 		self.frm_values.setStyleSheet(st.qss_frm_group)
+		self.frm_times.setStyleSheet(st.qss_frm_group)
 		self.lbl_title_op_mode.setStyleSheet("background-color: rgba(0, 0, 0, 0)")
 		self.lbl_title_basic_params.setStyleSheet("background-color: rgba(0, 0, 0, 0)")
 		self.lbl_title_right.setStyleSheet("background-color: rgba(0, 0, 0, 0)")
+		for lbl in self.frm_times.findChildren(QLabel):
+			lbl.setStyleSheet("background-color: rgba(0, 0, 0, 0)")
 		self.frm_aceptar.setStyleSheet(st.qss_frm_but_enabled)
 		self.frm_cancelar.setStyleSheet(st.qss_frm_but_enabled)
 		self.frm_volver.setStyleSheet(st.qss_frm_but_enabled)
@@ -119,8 +122,12 @@ class ConfigDialog(QDialog, Ui_Dialog):
 
 		if self.params['mode'].value == OpModEnum.vcv.value:
 			self.frm_param_pt.show()
+			self.lbl_ptt_title.show()
+			self.lbl_ptt.show()
 		elif self.params['mode'].value == OpModEnum.pcv.value:
 			self.frm_param_pt.hide()
+			self.lbl_ptt_title.hide()
+			self.lbl_ptt.hide()
 
 		if self.selected_param is None:
 			self.frm_left_arrow.hide()
@@ -185,6 +192,17 @@ class ConfigDialog(QDialog, Ui_Dialog):
 				self.frm_left_arrow_2.mousePressEvent = partial(self.frm_left_arrow_2_pressed)
 				self.frm_right_arrow_2.mousePressEvent = partial(self.frm_right_arrow_2_pressed)
 
+	def update_ie_times(self):
+		it, et, ft, ptt = Parameter.calculate_ie_times(self.d_params, self.params)
+		lbl_it = self.findChild(QLabel, name='lbl_it')
+		lbl_et = self.findChild(QLabel, name='lbl_et')
+		lbl_ft = self.findChild(QLabel, name='lbl_flowt')
+		lbl_ptt = self.findChild(QLabel, name='lbl_ptt')
+		lbl_it.setText(f"{it:.1f}")
+		lbl_et.setText(f"{et:.1f}")
+		lbl_ft.setText(f"{ft:.1f}")
+		lbl_ptt.setText(f"{ptt:.1f}")
+
 	def update_ui(self):
 		if self.selected_param == ParamEnum.ier.name:
 			param = self.params[ParamEnum.ier_i.name]
@@ -225,6 +243,8 @@ class ConfigDialog(QDialog, Ui_Dialog):
 				label = self.get_value_label(f)
 				label.setText(f"{param['value']:{self.params[name].value_format}}")
 
+		self.update_ie_times()
+
 		label = self.get_value_label(self.selected_param_frame)
 		if self.selected_param == ParamEnum.ier.name:
 			ier_i_param = self.params[ParamEnum.ier_i.name]
@@ -248,14 +268,20 @@ class ConfigDialog(QDialog, Ui_Dialog):
 		self.frm_param_op_mode_pcv.setStyleSheet(st.qss_frm_selected)
 		self.frm_param_op_mode_vcv.setStyleSheet(st.qss_frm_top)
 		self.frm_param_pt.hide()
+		self.lbl_ptt_title.hide()
+		self.lbl_ptt.hide()
 		self.set_labels()
+		self.update_ie_times()
 
 	def frm_param_op_mode_vcv_pressed(self, event: QMouseEvent):
 		self.params['mode'].value = OpModEnum.vcv.value
 		self.frm_param_op_mode_vcv.setStyleSheet(st.qss_frm_selected)
 		self.frm_param_op_mode_pcv.setStyleSheet(st.qss_frm_top)
 		self.frm_param_pt.show()
+		self.lbl_ptt_title.show()
+		self.lbl_ptt.show()
 		self.set_labels()
+		self.update_ie_times()
 
 	def frm_aceptar_pressed(self, event: QMouseEvent):
 		if self.selected_param is not None:

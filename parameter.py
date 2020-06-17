@@ -68,16 +68,16 @@ class Parameter:
 		mf = _overlay_current_value(ParamEnum.mf.name, current_values, params)
 		peep = _overlay_current_value(ParamEnum.peep.name, current_values, params)
 		mode = _overlay_current_value(ParamEnum.mode.name, current_values, params)
-		it, et = Parameter.calculate_ie_times(current_values, params)
+		it, et, ft, ptt = Parameter.calculate_ie_times(current_values, params)
 		brt = 60 / brpm
 		ier = ier_i / ier_e
 		if mode == OpModEnum.vcv.value:
 			if param_name == ParamEnum.mf.name:
-				mf = tvm / it
+				mf = tvm / ft
 				return mf * 60 / 1000
 			elif param_name == ParamEnum.tvm.name:
 				mf = mf * 1000 / 60
-				return mf * it
+				return mf * ft
 		raise NotImplementedError
 
 	@classmethod
@@ -88,15 +88,16 @@ class Parameter:
 		mode = _overlay_current_value(ParamEnum.mode.name, current_values, params)
 		pt = _overlay_current_value(ParamEnum.pt.name, current_values, params)
 
-		if pt > 99:
-			pt = 99
-
 		period = 60 / brpm
 		it = period*ier_i/(ier_i + ier_e)
 		et = period - it
+		ptt = 0
 		if mode == OpModEnum.vcv.value:
-			it *= (100-pt)/100
-		return it, et
+			if pt > 99:
+				pt = 99
+			ptt = it*pt/100
+		ft = it - ptt
+		return it, et, ft, ptt
 
 
 class OpMode:

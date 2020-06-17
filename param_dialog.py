@@ -8,7 +8,7 @@ from ui_param_set import Ui_Dialog
 from PyQt5.QtWidgets import QDialog, QGroupBox, QLabel
 from PyQt5 import QtCore, Qt
 from PyQt5.QtCore import QEvent
-from parameter import Parameter, ParamEnum
+from parameter import Parameter, ParamEnum, OpModEnum
 import copy
 
 css = '''
@@ -81,6 +81,21 @@ class ParamSetDialog(QDialog, Ui_Dialog):
 		else:
 			self.lbl_param_name.setText(self.param.screen_name)
 		print(self.param.name)
+
+		if self.param.name in (ParamEnum.ier_e.name, ParamEnum.brpm.name):
+			self.grp_times.show()
+			if params['mode'].value == OpModEnum.vcv.value:
+				self.lbl_flowt_title.show()
+				self.lbl_flowt.show()
+				self.lbl_ptt_title.show()
+				self.lbl_ptt.show()
+			else:
+				self.lbl_flowt_title.hide()
+				self.lbl_flowt.hide()
+				self.lbl_ptt_title.hide()
+				self.lbl_ptt.hide()
+		else:
+			self.grp_times.hide()
 
 		if self.param.name == ParamEnum.ier_e.name:
 			self.param2 = self.params[ParamEnum.ier_i.name]
@@ -162,6 +177,17 @@ class ParamSetDialog(QDialog, Ui_Dialog):
 		print(f" value_max: {self.value_max}")
 		print(f" step: {self.step}")
 
+	def update_ie_times(self):
+		it, et, ft, ptt = Parameter.calculate_ie_times(self.d_params, self.params)
+		lbl_it = self.findChild(QLabel, name='lbl_it')
+		lbl_et = self.findChild(QLabel, name='lbl_et')
+		lbl_ft = self.findChild(QLabel, name='lbl_flowt')
+		lbl_ptt = self.findChild(QLabel, name='lbl_ptt')
+		lbl_it.setText(f"{it:.1f}")
+		lbl_et.setText(f"{et:.1f}")
+		lbl_ft.setText(f"{ft:.1f}")
+		lbl_ptt.setText(f"{ptt:.1f}")
+
 	def update_ui(self):
 		val = self.d_params[self.param.name]['value']
 		if self.param.name == ParamEnum.ier_e.name:
@@ -198,6 +224,8 @@ class ParamSetDialog(QDialog, Ui_Dialog):
 			for idx, p in enumerate(self.affected_params):
 				lbl_value = self.findChild(QLabel, name="lbl_aff_param_value_{}".format(idx + 1))
 				lbl_value.setText("{:.2f}".format(self.d_params[p.name]['value']))
+
+		self.update_ie_times()
 
 	def update_slider(self):
 		try:

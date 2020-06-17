@@ -287,6 +287,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 			self.lbl_op_mode.setText("PCV")
 
 		for name, p in self.params.items():
+			if name == ParamEnum.pt.name:
+				continue
 			if name == ParamEnum.gscale.name:
 				self.gscale_idx = p.value
 				self.adjust_gscale()
